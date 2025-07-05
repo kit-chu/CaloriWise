@@ -53,7 +53,7 @@ class CalorieCalendarWidget extends StatefulWidget {
 class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with SingleTickerProviderStateMixin {
   late DateTime _focusedDay;
   late DateTime _selectedDay;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  CalendarFormat _calendarFormat = CalendarFormat.week;
   bool _isChangingMonth = false;
   String _currentMonth = '';
 
@@ -100,7 +100,7 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
         children: [
           _buildHeader(),
           _buildCalendar(),
-          _buildLegend(),
+          // _buildLegend(),
         ],
       ),
     );
