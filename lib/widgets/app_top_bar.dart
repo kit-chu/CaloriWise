@@ -6,12 +6,14 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback? onSettingsTap;
   final int? streakDays;
+  final int? heartRate; // เพิ่มพารามิเตอร์สำหรับอัตราการเต้นหัวใจ
 
   const AppTopBar({
     super.key,
     required this.title,
     this.onSettingsTap,
     this.streakDays,
+    this.heartRate, // เพิ่มพารามิเตอร์ในคอนสตรัคเตอร์
   });
 
   @override
@@ -36,10 +38,38 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(width: 8),
-
         ],
       ),
       actions: [
+        // Heart rate capsule
+        if (heartRate != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Colors.red.withAlpha(30),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.favorite,
+                  color: Colors.red[400],
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '$heartRate bpm',
+                  style: AppTextStyle.labelMedium(context).copyWith(
+                    color: Colors.red[400],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
         // Streak capsule
         if (streakDays != null)
           Container(
