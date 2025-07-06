@@ -71,7 +71,8 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
         _isChangingMonth = true;
       });
 
-      Future.delayed(const Duration(milliseconds: 50), () {
+      // เพิ่ม delay เพื่อให้แน่ใจว่า UI ได้อัพเดทก่อนที่จะรีเซ็ต animation
+      Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
           setState(() {
             _isChangingMonth = false;
@@ -88,6 +89,7 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(25), // 0.1 * 255 ≈ 25
@@ -111,10 +113,9 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
     final isCurrentDay = isSameDay(_selectedDay, now);
     // เช็คว่าเดือนและปีปัจจุบันตรงกับที่เลือกไหม
     final isCurrentMonth = _focusedDay.month == now.month && _focusedDay.year == now.year;
-    final currentMonth = DateTime(_focusedDay.year, _focusedDay.month);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -342,101 +343,104 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
   }
 
   Widget _buildCalendar() {
-    return TableCalendar<CalorieData>(
-      firstDay: DateTime.utc(2020, 1, 1),
-      lastDay: DateTime.utc(2030, 12, 31),
-      focusedDay: _focusedDay,
-      calendarFormat: _calendarFormat,
-      availableGestures: AvailableGestures.horizontalSwipe, // อนุญาตให้ปัดซ้าย-ขวาเท่านั้น
-      eventLoader: (day) {
-        final data = widget.calorieData[DateTime(day.year, day.month, day.day)];
-        return data != null ? [data] : [];
-      },
-      startingDayOfWeek: StartingDayOfWeek.monday,
-      locale: 'th_TH', // Thai locale
-      headerStyle: const HeaderStyle(
-        formatButtonVisible: false,
-        titleCentered: true,
-        leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF7C3AED)),
-        rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF7C3AED)),
-        titleTextStyle: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF1F1F1F),
-        ),
-      ),
-      daysOfWeekStyle: const DaysOfWeekStyle(
-        weekdayStyle: TextStyle(
-          color: Color(0xFF6B7280),
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
-        weekendStyle: TextStyle(
-          color: Color(0xFF6B7280),
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      calendarStyle: CalendarStyle(
-        outsideDaysVisible: false,
-        weekendTextStyle: AppTextStyle.titleSmall(context).copyWith(
-          color: AppTheme.textSecondary,
-        ),
-        holidayTextStyle: TextStyle(color: Color(0xFF1F1F1F)),
-        defaultTextStyle: AppTextStyle.titleSmall(context),
-        selectedTextStyle: AppTextStyle.titleSmall(context).copyWith(
-          color: AppTheme.primaryPurple,
-        ),
-        todayTextStyle: AppTextStyle.titleSmall(context).copyWith(
-          color: AppTheme.primaryPurple,
-        ),
-        outsideTextStyle: AppTextStyle.titleSmall(context).copyWith(
-          color: AppTheme.textSecondary.withAlpha(128), // 0.5 * 255 ≈ 128
-        ),
-        selectedDecoration: BoxDecoration(
-          color: Color(0xFF7C3AED),
-          shape: BoxShape.circle,
-        ),
-        todayDecoration: BoxDecoration(
-          color: Color(0xFF1F1F1F),
-          shape: BoxShape.circle,
-        ),
-        markerDecoration: BoxDecoration(
-          color: Colors.transparent,
-        ),
-      ),
-      calendarBuilders: CalendarBuilders(
-        defaultBuilder: (context, date, _) {
-          return _buildCalendarDay(date, false, false);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: TableCalendar<CalorieData>(
+        firstDay: DateTime.utc(2020, 1, 1),
+        lastDay: DateTime.utc(2030, 12, 31),
+        focusedDay: _focusedDay,
+        calendarFormat: _calendarFormat,
+        availableGestures: AvailableGestures.horizontalSwipe, // อนุญาตให้ปัดซ้าย-ขวาเท่านั้น
+        eventLoader: (day) {
+          final data = widget.calorieData[DateTime(day.year, day.month, day.day)];
+          return data != null ? [data] : [];
         },
-        todayBuilder: (context, date, _) {
-          return _buildCalendarDay(date, true, false);
+        startingDayOfWeek: StartingDayOfWeek.monday,
+        locale: 'th_TH', // Thai locale
+        headerStyle: const HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+          leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF7C3AED)),
+          rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF7C3AED)),
+          titleTextStyle: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1F1F1F),
+          ),
+        ),
+        daysOfWeekStyle: const DaysOfWeekStyle(
+          weekdayStyle: TextStyle(
+            color: Color(0xFF6B7280),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+          weekendStyle: TextStyle(
+            color: Color(0xFF6B7280),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        calendarStyle: CalendarStyle(
+          outsideDaysVisible: false,
+          weekendTextStyle: AppTextStyle.titleSmall(context).copyWith(
+            color: AppTheme.textSecondary,
+          ),
+          holidayTextStyle: TextStyle(color: Color(0xFF1F1F1F)),
+          defaultTextStyle: AppTextStyle.titleSmall(context),
+          selectedTextStyle: AppTextStyle.titleSmall(context).copyWith(
+            color: AppTheme.primaryPurple,
+          ),
+          todayTextStyle: AppTextStyle.titleSmall(context).copyWith(
+            color: AppTheme.primaryPurple,
+          ),
+          outsideTextStyle: AppTextStyle.titleSmall(context).copyWith(
+            color: AppTheme.textSecondary.withAlpha(128), // 0.5 * 255 ≈ 128
+          ),
+          selectedDecoration: BoxDecoration(
+            color: Color(0xFF7C3AED),
+            shape: BoxShape.circle,
+          ),
+          todayDecoration: BoxDecoration(
+            color: Color(0xFF1F1F1F),
+            shape: BoxShape.circle,
+          ),
+          markerDecoration: BoxDecoration(
+            color: Colors.transparent,
+          ),
+        ),
+        calendarBuilders: CalendarBuilders(
+          defaultBuilder: (context, date, _) {
+            return _buildCalendarDay(date, false, false);
+          },
+          todayBuilder: (context, date, _) {
+            return _buildCalendarDay(date, true, false);
+          },
+          selectedBuilder: (context, date, _) {
+            return _buildCalendarDay(date, false, true);
+          },
+        ),
+        selectedDayPredicate: (day) {
+          return isSameDay(_selectedDay, day);
         },
-        selectedBuilder: (context, date, _) {
-          return _buildCalendarDay(date, false, true);
+        onDaySelected: (selectedDay, focusedDay) {
+          setState(() {
+            _selectedDay = selectedDay;
+            _focusedDay = focusedDay;
+          });
+          widget.onDaySelected?.call(selectedDay);
+        },
+        onFormatChanged: (format) {
+          setState(() {
+            _calendarFormat = format;
+          });
+        },
+        onPageChanged: (focusedDay) {
+          _resetAnimation();
+          setState(() {
+            _focusedDay = focusedDay;
+          });
         },
       ),
-      selectedDayPredicate: (day) {
-        return isSameDay(_selectedDay, day);
-      },
-      onDaySelected: (selectedDay, focusedDay) {
-        setState(() {
-          _selectedDay = selectedDay;
-          _focusedDay = focusedDay;
-        });
-        widget.onDaySelected?.call(selectedDay);
-      },
-      onFormatChanged: (format) {
-        setState(() {
-          _calendarFormat = format;
-        });
-      },
-      onPageChanged: (focusedDay) {
-        _resetAnimation();
-        setState(() {
-          _focusedDay = focusedDay;
-        });
-      },
     );
   }
 

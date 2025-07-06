@@ -12,7 +12,7 @@ class RecentFoodLogs extends StatefulWidget {
   const RecentFoodLogs({
     super.key,
     required this.logs,
-    this.height = 550,
+    this.height = 570,
   });
 
   @override
@@ -151,7 +151,7 @@ class _RecentFoodLogsState extends State<RecentFoodLogs> {
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
-                  height: 60, // เพิ่มความสูงจาก 40 เป็น 60
+                  height: 70, // เพิ่มความสูงจาก 40 เป็น 60
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _timeFilters.length,
@@ -364,16 +364,18 @@ class _FoodLogCard extends StatelessWidget {
       ),
       margin: const EdgeInsets.only(bottom: 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           log.name,
