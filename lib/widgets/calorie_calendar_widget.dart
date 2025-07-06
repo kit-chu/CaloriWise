@@ -111,8 +111,36 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
   Widget _buildHeader() {
     final now = DateTime.now();
     final isCurrentDay = isSameDay(_selectedDay, now);
+
+    // เช็คว่าอยู่ในสัปดาห์เดียวกันหรือไม่
+    final nowStartOfWeek = DateTime(now.year, now.month, now.day - now.weekday + 1);
+    final focusedStartOfWeek = DateTime(_focusedDay.year, _focusedDay.month, _focusedDay.day - _focusedDay.weekday + 1);
+    final isCurrentWeek = isSameDay(nowStartOfWeek, focusedStartOfWeek);
+
     // เช็คว่าเดือนและปีปัจจุบันตรงกับที่เลือกไหม
     final isCurrentMonth = _focusedDay.month == now.month && _focusedDay.year == now.year;
+
+    // เพิ่มเงื่อนไขการแสดงสีตามฟอร์แมต
+    Color buttonColor = Colors.grey.withOpacity(0.1);
+    Color textColor = Colors.grey;
+
+    if (_calendarFormat == CalendarFormat.week) {
+      if (isCurrentWeek && isCurrentDay) {
+        buttonColor = AppTheme.primaryPurple;
+        textColor = Colors.white;
+      } else {
+        buttonColor = AppTheme.primaryPurple.withOpacity(0.1);
+        textColor = AppTheme.primaryPurple;
+      }
+    } else {
+      if (isCurrentMonth && isCurrentDay) {
+        buttonColor = AppTheme.primaryPurple;
+        textColor = Colors.white;
+      } else if (isCurrentMonth) {
+        buttonColor = AppTheme.primaryPurple.withOpacity(0.1);
+        textColor = AppTheme.primaryPurple;
+      }
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -129,7 +157,6 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              // ปุ่มเลือกเดือน
               TextButton(
                 onPressed: () => _showMonthYearPicker(),
                 child: Row(
@@ -156,7 +183,6 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // ปุ่มสลับมุมมอง
               Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.withOpacity(0.1),
@@ -185,7 +211,6 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
                 ),
               ),
               const SizedBox(width: 8),
-              // ปุ่มวันนี้
               GestureDetector(
                 onTap: () {
                   setState(() {
@@ -199,22 +224,13 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    // เปลี่ยนสีตามเงื่อนไขเดือนและปีปัจจุบัน
-                    color: isCurrentMonth && isCurrentDay
-                        ? AppTheme.primaryPurple
-                        : isCurrentMonth
-                            ? AppTheme.primaryPurple.withOpacity(0.1)
-                            : Colors.grey.withOpacity(0.1),
+                    color: buttonColor,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     'วันนี้',
                     style: AppTextStyle.labelMedium(context).copyWith(
-                      color: isCurrentMonth && isCurrentDay
-                          ? Colors.white
-                          : isCurrentMonth
-                              ? AppTheme.primaryPurple
-                              : Colors.grey,
+                      color: textColor,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -388,10 +404,10 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
           holidayTextStyle: TextStyle(color: Color(0xFF1F1F1F)),
           defaultTextStyle: AppTextStyle.titleSmall(context),
           selectedTextStyle: AppTextStyle.titleSmall(context).copyWith(
-            color: AppTheme.primaryPurple,
+            color: Color(0xFF7C3AED),
           ),
           todayTextStyle: AppTextStyle.titleSmall(context).copyWith(
-            color: AppTheme.primaryPurple,
+            color: Color(0xFF7C3AED),
           ),
           outsideTextStyle: AppTextStyle.titleSmall(context).copyWith(
             color: AppTheme.textSecondary.withAlpha(128), // 0.5 * 255 ≈ 128
