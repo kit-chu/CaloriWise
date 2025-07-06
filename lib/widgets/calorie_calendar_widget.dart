@@ -360,7 +360,7 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
 
   Widget _buildCalendar() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TableCalendar<CalorieData>(
         firstDay: DateTime.utc(2020, 1, 1),
         lastDay: DateTime.utc(2030, 12, 31),
