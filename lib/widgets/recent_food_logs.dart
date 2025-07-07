@@ -223,6 +223,7 @@ class _RecentFoodLogsState extends State<RecentFoodLogs> {
                           padding: const EdgeInsets.only(bottom: 16),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: List.generate(paginatedLogs.length, (index) {
                               return Container(
                                 width: 8,

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_screen.dart';
+import 'screens/chat_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/add_food_screen.dart';
+import 'screens/exercise_calculator_screen.dart';
 import 'widgets/app_top_bar.dart';
 import 'widgets/custom_bottom_nav.dart';
 
@@ -32,22 +36,20 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // สร้าง list ของหน้าต่างๆ
   final List<Widget> _screens = [
     const HomeScreen(),
-    const Center(child: Text('Chat AI')), // TODO: สร้างหน้า Chat AI
-    const Center(child: Text('Camera')), // TODO: สร้างหน้ากล้อง
-    const Center(child: Text('Add')), // TODO: สร้างหน้าเพิ่มรายการ
-    const Center(child: Text('History')), // TODO: สร้างหน้าประวัติ
+    const AddFoodScreen(),
+    const ExerciseCalculatorScreen(),
+    const ChatScreen(),
+    const ProfileScreen(),
   ];
 
-  // สร้าง list ของชื่อหน้าต่างๆ
   final List<String> _titles = [
     'Calories Wise',
+    'เพิ่มอาหาร',
+    'คำนวณแคลอรี่',
     'Chat AI',
-    'ถ่ายรูปอาหาร',
-    'เพิ่มรายการ',
-    'ชุมชนแคลอรี่',
+    'โปรไฟล์',
   ];
 
   void _onItemTapped(int index) {

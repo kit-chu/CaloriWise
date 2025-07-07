@@ -15,106 +15,93 @@ class CustomBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    const navBarHeight = 70.0; // Increased height to accommodate content
-    const fabSize = 56.0;
-    const fabTopOffset = fabSize / 2;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Bottom Navigation Bar with Container for proper height
-        Container(
-          height: navBarHeight + bottomPadding,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, -2),
-              ),
-            ],
+    return Container(
+      height: 70 + bottomPadding,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
           ),
-          child: Padding(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            child: BottomNavigationBar(
-              currentIndex: currentIndex,
-              onTap: onTap,
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              selectedItemColor: AppTheme.primaryPurple,
-              unselectedItemColor: AppTheme.textSecondary,
-              showUnselectedLabels: true,
-              selectedLabelStyle: AppTextStyle.labelSmall(context).copyWith(
-                fontSize: 9, // Slightly reduced font size
-                height: 1.0, // Reduced line height
-                fontWeight: FontWeight.w500,
-              ),
-              unselectedLabelStyle: AppTextStyle.labelSmall(context).copyWith(
-                fontSize: 9, // Slightly reduced font size
-                height: 1.0, // Reduced line height
-              ),
-              items: [
-                _buildNavItem(Icons.home_outlined, Icons.home, 'หน้าหลัก'),
-                _buildNavItem(Icons.chat_outlined, Icons.chat, 'Chat AI'),
-                // ช่องว่างสำหรับปุ่มกล้อง
-                const BottomNavigationBarItem(
-                  icon: SizedBox(width: fabSize, height: 24), // Reduced height
-                  label: '',
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: bottomPadding,
+          top: 3,
+          left: 6,
+          right: 6,
+        ),
+        child: Row(
+          children: [
+            _buildNavItem(context, Icons.home_outlined, Icons.home, 'หน้าหลัก', 0),
+            _buildNavItem(context, Icons.add_circle_outline, Icons.add_circle, 'เพิ่มอาหาร', 1),
+            _buildNavItem(context, Icons.local_fire_department_outlined, Icons.local_fire_department, 'คำนวณแคลอรี่', 2),
+            _buildNavItem(context, Icons.chat_bubble_outline, Icons.chat_bubble, 'แชท', 3),
+            _buildNavItem(context, Icons.person_outline, Icons.person, 'โปรไฟล์', 4),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(BuildContext context, IconData icon, IconData activeIcon, String label, int index) {
+    final bool isSelected = currentIndex == index;
+
+    return Flexible(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => onTap(index),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: isSelected
+                      ? BoxDecoration(
+                    color: AppTheme.primaryPurple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  )
+                      : null,
+                  child: Icon(
+                    isSelected ? activeIcon : icon,
+                    size: 19,
+                    color: isSelected ? AppTheme.primaryPurple : AppTheme.textSecondary,
+                  ),
                 ),
-                _buildNavItem(Icons.add_circle_outline, Icons.add_circle, 'เพิ่มรายการ'),
-                _buildNavItem(Icons.group_outlined, Icons.group, 'ชุมชน'),
+                const SizedBox(height: 2),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: AppTextStyle.labelSmall(context).copyWith(
+                      fontSize: 8,
+                      height: 1.0,
+                      fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                      color: isSelected ? AppTheme.primaryPurple : AppTheme.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),
         ),
-        // Camera FAB
-        Positioned(
-          left: 0,
-          right: 0,
-          top: -fabTopOffset,
-          child: GestureDetector(
-            onTap: () => onTap(2),
-            child: Container(
-              width: fabSize,
-              height: fabSize,
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryPurple,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryPurple.withOpacity(0.3),
-                    blurRadius: 8,
-                    spreadRadius: 2,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.camera_alt_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  BottomNavigationBarItem _buildNavItem(IconData icon, IconData activeIcon, String label) {
-    return BottomNavigationBarItem(
-      icon: Padding(
-        padding: const EdgeInsets.only(bottom: 2), // Reduced padding
-        child: Icon(icon, size: 22), // Slightly smaller icon
       ),
-      activeIcon: Padding(
-        padding: const EdgeInsets.only(bottom: 2), // Reduced padding
-        child: Icon(activeIcon, size: 22), // Slightly smaller icon
-      ),
-      label: label,
     );
   }
 }
