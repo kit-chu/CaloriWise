@@ -11,6 +11,7 @@ import '../widgets/macro_tracking_card.dart';
 import '../widgets/painters/multi_color_circular_progress_painter.dart';
 import '../widgets/recent_food_logs.dart';
 import '../widgets/painters/heart_rate_graph_painter.dart';
+import 'add_food_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late DateTime _selectedDay;
   late MacroData _mockMacroData;
 
-  // Tab Controller สำหรับ Bottom Navigation
+  // Tab Controller สำหรับ Bottom Navigation - เปลี่ยนจาก 3 เป็น 4 แท็บ
   late TabController _tabController;
 
   // Animation controller สำหรับ effect หัวใจ
@@ -42,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this); // เปลี่ยนเป็น 4 แท็บ
     _generateMockData();
     _generateMockMacroData();
     _generateMockFoodLogs();
@@ -364,6 +365,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 _buildOverviewTab(),
                 _buildNutritionTab(),
                 _buildActivityTab(),
+                _buildFoodLogTab(), // เพิ่มแท็บบันทึกอาหาร
               ],
             ),
           ),
@@ -543,35 +545,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildTabBar() {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      color: Colors.white,
       child: TabBar(
         controller: _tabController,
         labelColor: AppTheme.primaryPurple,
         unselectedLabelColor: Colors.grey[600],
         indicatorColor: AppTheme.primaryPurple,
         indicatorWeight: 3,
+        labelStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
         tabs: const [
-          Tab(
-            icon: Icon(Icons.dashboard),
-            text: 'ภาพรวม',
-          ),
-          Tab(
-            icon: Icon(Icons.restaurant),
-            text: 'โภชนาการ',
-          ),
-          Tab(
-            icon: Icon(Icons.favorite),
-            text: 'สุขภาพ',
-          ),
+          Tab(text: 'ภาพรวม'),
+          Tab(text: 'โภชนาการ'),
+          Tab(text: 'กิจกรรม'),
+          Tab(text: 'บันทึกอาหาร'), // เพิ่มแท็บใหม่
         ],
       ),
     );
@@ -624,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // Tab 2: โภชนาการ - Macro และอาหาร
+  // Tab 2: โภชนาการ - Macro แล���อาหาร
   Widget _buildNutritionTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -649,6 +638,160 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _buildWorkoutSummary(),
           const SizedBox(height: 16),
           _buildHealthMetrics(),
+        ],
+      ),
+    );
+  }
+
+  // Tab 4: บันทึกอาหาร - เพิ่มอาหารและรายการอาหารที่บันทึกไว้
+  Widget _buildFoodLogTab() {
+    return Container(
+      color: AppTheme.backgroundLight,
+      child: Column(
+        children: [
+          // Quick Add Food Button
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddFoodScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add_circle_outline),
+                  SizedBox(width: 8),
+                  Text('เพิ่มอาหาร', style: TextStyle(fontSize: 16)),
+                ],
+              ),
+            ),
+          ),
+          // Food Log List Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Text(
+                  'รายการอาหารที่เพิ่ม',
+                  style: AppTextStyle.titleMedium(context).copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${_mockRecentFoodLogs.length} รายการ',
+                  style: AppTextStyle.bodySmall(context).copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Food Log List
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              itemCount: _mockRecentFoodLogs.length,
+              itemBuilder: (context, index) {
+                final food = _mockRecentFoodLogs[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(12),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        food.imageUrl,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 50,
+                            height: 50,
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.image_not_supported),
+                          );
+                        },
+                      ),
+                    ),
+                    title: Text(
+                      food.name,
+                      style: AppTextStyle.titleSmall(context).copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          '${food.calories} kcal',
+                          style: AppTextStyle.bodySmall(context).copyWith(
+                            color: AppTheme.primaryPurple,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'โปรตีน: ${food.protein}g • คาร์บ: ${food.carbs}g • ไขมัน: ${food.fat}g',
+                          style: AppTextStyle.bodySmall(context).copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          DateFormatter.formatTimeAgo(food.timestamp),
+                          style: AppTextStyle.bodySmall(context).copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Icon(
+                          Icons.more_vert,
+                          color: AppTheme.textSecondary,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      // Show food details or edit
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -866,7 +1009,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'ไม่มีข้อมูลอัตราการเต้นของหัวใจ',
+                    'ไม่มีข้อมูลอ��ตราการเต้นของหัวใจ',
                     style: AppTextStyle.bodyMedium(context).copyWith(
                       color: Colors.grey[600],
                     ),

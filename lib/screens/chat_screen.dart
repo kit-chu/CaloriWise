@@ -8,6 +8,7 @@ class ChatMessage {
   final String? imageUrl;
   final DateTime timestamp;
   final bool isTyping;
+  final ChatMessageType type;
 
   ChatMessage({
     required this.message,
@@ -15,7 +16,16 @@ class ChatMessage {
     this.imageUrl,
     DateTime? timestamp,
     this.isTyping = false,
+    this.type = ChatMessageType.general,
   }) : timestamp = timestamp ?? DateTime.now();
+}
+
+enum ChatMessageType {
+  general,
+  mealPlan,
+  healthAdvice,
+  exerciseGuide,
+  goalProgress
 }
 
 class ChatScreen extends StatefulWidget {
@@ -117,22 +127,100 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     });
   }
 
+  void _handleAIResponse(String message, {ChatMessageType type = ChatMessageType.general}) {
+    setState(() {
+      _messages.add(ChatMessage(
+        message: message,
+        isUser: false,
+        type: type,
+        isTyping: false,
+      ));
+    });
+    _scrollToBottom();
+  }
+
+  void _sendMessage() {
+    if (_messageController.text.trim().isEmpty) return;
+
+    final userMessage = _messageController.text;
+    setState(() {
+      _messages.add(ChatMessage(
+        message: userMessage,
+        isUser: true,
+      ));
+      _messageController.clear();
+
+      // Add AI typing indicator
+      _messages.add(ChatMessage(
+        message: "AI is typing...",
+        isUser: false,
+        isTyping: true,
+      ));
+    });
+    _scrollToBottom();
+
+    // Simulate AI response based on message content
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        _messages.removeLast(); // Remove typing indicator
+      });
+
+      if (userMessage.toLowerCase().contains("อาหาร") ||
+          userMessage.toLowerCase().contains("แผน")) {
+        _handleAIResponse(
+          "นี่��ือแผนอาหารที่แนะนำตามเป้าหมายของคุณ:\n\n"
+          "🍳 เช้า: โจ๊กไข่ขาว (200 kcal)\n"
+          "🥗 กลางวัน: สลัดอกไก่ (350 kcal)\n"
+          "🍖 เย็น: ปลาย่างผักต้ม (400 kcal)",
+          type: ChatMessageType.mealPlan
+        );
+      } else if (userMessage.toLowerCase().contains("ออกกำลังกาย")) {
+        _handleAIResponse(
+          "แนะนำการออกกำลังกายสำหรับวันนี้:\n\n"
+          "🏃‍♂️ วิ่งเบาๆ 20 นาที\n"
+          "💪 กายบริหาร 15 นาที\n"
+          "🧘‍♀️ ยืดเหยียด 10 นา��ี",
+          type: ChatMessageType.exerciseGuide
+        );
+      } else {
+        _handleAIResponse(
+          "ฉันเป็น AI โค้ชส่วนตัวของคุณ สามารถช่วยเรื่องต่อไปนี้:\n"
+          "• วางแผนอาหาร\n"
+          "• แนะนำการออกกำลังกาย\n"
+          "• ตอบคำถามด้านสุขภาพ\n"
+          "• ติดตามความก้าวหน้า",
+          type: ChatMessageType.general
+        );
+      }
+    });
+  }
+
   String _getAIResponse(String message) {
     message = message.toLowerCase();
 
     if (message.contains('แคลอรี่') || message.contains('calorie')) {
       return '📊 **เรื่องแคลอรี่**\n\nแคลอรี่คือหน่วยวัดพลังงานในอาหาร\n\n**ความต้องการต่อวัน:**\n• ผู้ชาย: 2,000-2,500 kcal\n• ผู้หญิง: 1,800-2,000 kcal\n\n💡 **Tips:** ขึ้นอยู่กับอายุ น้ำหนัก และกิจกรรมด้วยนะครับ!';
+    } else if (message.contains('ออกกำลังกาย') || message.contains('exercise') || message.contains('วิ่ง') || message.contains('เดิน')) {
+      return '🏃‍♂️ **การออกกำลังกาย**\n\n**แคลอรี่ที่เผาผลาญ (น้ำหนัก 65 กก.):**\n• เดินเร็ว (30 นาที): 150 kcal\n• วิ่งเบาๆ (30 นาที): 300 kcal\n• ปั่นจักรยาน (30 นาที): 250 kcal\n• ว่ายน้ำ (30 นาที): 350 kcal\n\n💪 **คำแนะนำ:** ออกกำลังกายอย่างน้อย 150 นาที/สัปดาห์';
+    } else if (message.contains('คำนวณ') || message.contains('calculate')) {
+      return '🧮 **เครื่องคำนวณ**\n\n**คำนวณได้:**\n• แคลอรี่ที่เผาผลาญจากการออกกำลังกาย\n• BMR (อัตราการเผาผลาญพื้นฐาน)\n• BMI (ดัชนีมวลกาย)\n• ความต้องการน้ำต่อวัน\n\n📱 **วิธีใช้:** พิมพ์ "คำนวณ BMI" หรือ "คำนวณแคลอรี่การวิ่ง 30 นาที"';
+    } else if (message.contains('bmi')) {
+      return '📏 **คำนวณ BMI**\n\n**สูตร:** น้ำหนัก (กก.) ÷ ส่วนสูง² (ม.)\n\n**เกณฑ์ประเมิน:**\n• ต่ำกว่า 18.5: ผอมเกินไป\n• 18.5-22.9: ปกติ\n• 23-24.9: ท้วม\n• 25-29.9: อ้วน\n• 30 ขึ้นไป: อ้วนมาก\n\n💡 **ตัวอย่าง:** สูง 170 ซม. น้ำหนัก 65 กก.\nBMI = 65 ÷ (1.7)² = 22.5 (ปกติ)';
+    } else if (message.contains('น้ำ') || message.contains('water')) {
+      return '💧 **การดื่มน้ำ**\n\n**ความต้องการน้ำต่อวัน:**\n• ผู้ชาย: 2.5-3 ลิตร\n• ผู้หญิง: 2-2.5 ลิตร\n\n**เพิ่มเติมเมื่อ:**\n• ออกกำลังกาย: +500-750 มล./ชม.\n• อากาศร้อน: +300-500 มล.\n• ป่วยไข้: +500-1000 มล.\n\n🕐 **Tips:** ดื่มน้ำทุก 2 ชม. อย่ารอจนหิว!';
     } else if (message.contains('อาหาร') || message.contains('กิน') || message.contains('เมนู')) {
-      return '🍽️ **เรื่องอาหาร**\n\n**หลักการกินดี:**\n• กินครบ 5 หมู่\n• ผักผลไม้ 5-9 ส่วนต่อวัน\n• ดื่มน้ำ 8-10 แก้ว\n• หลีกเลี่ยงอาหารทอด หวาน มัน\n\n🥗 ต้องการแนะนำเมนูเฉพาะไหมครับ?';
+      return '🍽️ **เรื่องอาหาร**\n\n**หลักการกินดี:**\n• กินครบ 5 หมู่\n• ผักผลไม้ 5-9 ส่วนต่อวัน\n• ดื่มน้ำ 8-10 แก้ว\n• หลีกเลี่ยงอาหารทอด หวาน มัน\n\n🥗 ต้องการ��นะนำเมนูเฉพาะไหมครับ?';
     } else if (message.contains('ลดน้ำหนัก') || message.contains('diet')) {
-      return '⚖️ **การลดน้ำหนัก**\n\n**หลักการ:**\n• สร้าง Calorie Deficit\n• กิน 500 kcal น้อยกว่าที่ใช้\n• ออกกำลังกาย 150 นาที/สัปดาห์\n\n**อาหารแนะนำ:**\n🥗 สลัด, ไก่ต้ม, ปลาย่าง\n🚫 หลีกเลี่ยง: ทอด, หวาน, แป้ง\n\n💪 อดทน + สม่ำเสมอคือกุญแจสำคัญครับ!';
+      return '⚖️ **การลดน้ำหนัก**\n\n**หลักการ:**\n• สร้าง Calorie Deficit\n• กิน 500 kcal น้อยกว่าที่ใช้\n• ออกกำลังกาย 150 นาที/สัปดาห์\n\n**อาหารแนะนำ:**\n🥗 สลัด, ไก่ต้ม, ปลาย่าง\n🚫 หลีกเลี่ยง: ทอด, หวาน, แป้ง\n\n💪 อดทน + ���ม่ำเสมอคือกุญแจสำคัญครับ!';
+    } else if (message.contains('เพิ่มน้ำหนัก') || message.contains('เพิ่มกล้าม')) {
+      return '💪 **การเพิ่มน้ำหนัก/กล้ามเนื้อ**\n\n**หลักการ:**\n• กิน Calorie Surplus 300-500 kcal\n• โปรตีน 1.6-2.2 กรัม/กก.น้ำหนัก\n• เวทเทรนนิ่ง 3-4 ครั้ง/สัปดาห์\n\n**อาหารแนะนำ:**\n🍖 ไก่ ปลา ไข่ ถั่ว\n🍚 ข้าวกล้อง ข้าวโอ๊ต\n🥜 ถั่วอัลมอนด์ อโวคาโด\n\n📈 **เป้าหมาย:** เพิ่ม 0.5-1 กก./เดือน';
     } else if (message.contains('สวัสดี') || message.contains('hello') || message.contains('hi')) {
-      return '👋 สวัสดีครับ! ยินดีที่ได้ช่วยเหลือ\n\n**ผมสามารถช่วยได้:**\n📷 วิเคราะห์รูปอาหาร\n📊 คำนวณแคลอรี่\n🍽️ แนะนำเมนู\n💪 คำแนะนำเรื่องสุขภาพ\n\nมีอะไรให้ช่วยไหมครับ? 😊';
+      return '👋 สวัสดีครับ! ยินดีที่ไ���้ช่วยเหลือ\n\n**ผมสามารถช่วยได้:**\n📷 วิเคราะห์รูปอาหาร\n🧮 คำนวณแคลอรี่และ BMI\n🏃‍♂️ แนะนำการออกกำลังกาย\n🍽️ แนะนำเมนูอาหาร\n💪 คำแนะนำเรื่องสุขภาพ\n\nมีอะไรให��ช่วยไหมครับ? 😊';
     } else if (message.contains('ขอบคุณ') || message.contains('thank')) {
       return '🙏 ยินดีครับ! หวังว่าจะเป็นประโยชน์นะครับ\n\nหากมีคำถามเพิ่มเติมเรื่องอาหาร โภชนาการ หรือสุขภาพ สามารถถามได้ตลอดเวลาเลยครับ! 😊';
     }
 
-    return '🤔 ขอโทษครับ ผมไม่ค่อยเข้าใจคำถาม\n\n**ลองถามเรื่องเหล่านี้ดูครับ:**\n📷 "วิเคราะห์รูปอาหารหน่อย"\n📊 "แคลอรี่ในข้าวผัดเท่าไหร่"\n🍽️ "แนะนำเมนูลดน้ำหนัก"\n\nหรือส่งรูปอาหารมาให้ผมวิเคราะห์ก็ได้ครับ! 😊';
+    return '🤔 ขอโทษครับ ผมไม���ค่อยเข้าใจคำถาม\n\n**ลองถา���เรื่องเหล่านี้ดูครับ:**\n📷 "วิเคราะห์รูปอาหารหน่อย"\n🧮 "คำนวณ BMI"\n🏃‍♂️ "แคลอรี่การวิ่ง 30 นาที"\n🍽️ "แนะนำเมนูลดน้ำหนัก"\n\nหรือส่งรูปอาหารมาให้ผมวิเคราะห์ก็ได้ครับ! 😊';
   }
 
   @override
@@ -449,8 +537,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             ),
             const SizedBox(width: 8),
             _buildQuickActionChip(
-              '📊 คำนวณแคลอรี่',
-                  () => _handleSendMessage('คำนวณแคลอรี่ให้หน่อย'),
+              '🧮 คำนวณ BMI',
+                  () => _handleSendMessage('คำนวณ BMI หน่อย'),
+            ),
+            const SizedBox(width: 8),
+            _buildQuickActionChip(
+              '🏃‍♂️ แคลอรี่การออกกำลังกาย',
+                  () => _handleSendMessage('แคลอรี่การออกกำลังกาย'),
             ),
             const SizedBox(width: 8),
             _buildQuickActionChip(
@@ -459,8 +552,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             ),
             const SizedBox(width: 8),
             _buildQuickActionChip(
-              '💪 ลดน้ำหนัก',
-                  () => _handleSendMessage('แนะนำวิธีลดน้ำหนัก'),
+              '💧 ความต้องการน้ำ',
+                  () => _handleSendMessage('ความต้องการน้ำต่อวัน'),
             ),
           ],
         ),

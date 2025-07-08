@@ -25,6 +25,26 @@ class _ExerciseCalculatorScreenState extends State<ExerciseCalculatorScreen> wit
   int _minutes = 0;
   String _searchQuery = '';
 
+  // Exercise History Data
+  final List<Map<String, dynamic>> _exerciseHistory = [
+    {'date': '9/7', 'type': 'วิ่ง', 'duration': 30, 'calories': 250, 'time': '06:30'},
+    {'date': '8/7', 'type': 'ยิม', 'duration': 45, 'calories': 300, 'time': '18:00'},
+    {'date': '7/7', 'type': 'โยคะ', 'duration': 60, 'calories': 180, 'time': '07:00'},
+    {'date': '6/7', 'type': 'ว่ายน้ำ', 'duration': 40, 'calories': 280, 'time': '17:30'},
+    {'date': '5/7', 'type': 'ปั่นจักรยาน', 'duration': 35, 'calories': 220, 'time': '06:00'},
+    {'date': '4/7', 'type': 'เดิน', 'duration': 45, 'calories': 150, 'time': '19:00'},
+    {'date': '3/7', 'type': 'เต้นซุมบ้า', 'duration': 50, 'calories': 200, 'time': '18:30'},
+  ];
+
+  // Weekly Exercise Summary
+  final Map<String, dynamic> _weeklyStats = {
+    'totalCalories': 1580,
+    'totalDuration': 305,
+    'averagePerDay': 44,
+    'mostPopularExercise': 'วิ่ง',
+    'streakDays': 5,
+  };
+
   // Exercise categories with icons
   final Map<String, List<Map<String, dynamic>>> exerciseCategories = {
     'คาร์ดิโอ': [
@@ -85,10 +105,10 @@ class _ExerciseCalculatorScreenState extends State<ExerciseCalculatorScreen> wit
   // ค่า MET สำหรับแต่ละประเภทการออกกำลังกาย
   final Map<String, double> _exerciseMETs = {
     'เดิน': 3.5, 'วิ่ง': 8.0, 'ปั่นจักรยาน': 6.0, 'ว่ายน้ำ': 7.0,
-    'กระโดดเชือก': 10.0, 'เต้นซุมบ้า': 6.5, 'บาสเกตบอล': 6.5,
+    'กระโดดเชือก': 10.0, 'เต้นซุมบ้า': 6.5, '���าสเกตบอล': 6.5,
     'ฟุตบอล': 7.0, 'เทนนิส': 5.5, 'แบดมินตัน': 5.5, 'วอลเลย์บอล': 5.0,
     'ปิงปอง': 4.0, 'โยคะ': 3.0, 'เวทเทรนนิ่ง': 4.5, 'เต้นแอโรบิก': 5.5,
-    'พิลาทิส': 3.5, 'คาร์ดิโอคิกบ็อกซิ่ง': 7.5, 'บอดี้เวท': 4.5,
+    'พิลาท��ส': 3.5, 'คาร์ดิโอคิกบ็อกซิ่ง': 7.5, 'บอดี้เวท': 4.5,
     'ทำสวน': 4.0, 'ทำความสะอาดบ้าน': 3.5, 'เดินช็อปปิ้ง': 3.0,
     'เล่นกับสัตว์เลี้ยง': 3.5, 'ขึ้นบันได': 6.0, 'ล้างรถ': 4.0,
   };
@@ -237,6 +257,10 @@ class _ExerciseCalculatorScreenState extends State<ExerciseCalculatorScreen> wit
           _buildHeartRateChart(),
           const SizedBox(height: 24),
           _buildTodayExercises(),
+          const SizedBox(height: 24),
+          _buildExerciseHistory(),
+          const SizedBox(height: 24),
+          _buildWeeklySummary(),
         ],
       ),
     );
@@ -1072,4 +1096,241 @@ class _ExerciseCalculatorScreenState extends State<ExerciseCalculatorScreen> wit
       ),
     );
   }
+
+  Widget _buildExerciseHistory() {
+    if (_exerciseHistory.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.history,
+              size: 48,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'ยังไม่มีประวัติการออกกำลังกาย',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'เริ่มบันทึกกิจกรรมของคุณเพื่อดูประวัติที่นี่!',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'ประวัติการออกกำลังกาย',
+              style: AppTextStyle.titleMedium(context).copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _exerciseHistory.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              color: Colors.grey[200],
+              indent: 20,
+              endIndent: 20,
+            ),
+            itemBuilder: (context, index) {
+              final exercise = _exerciseHistory[index];
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        exerciseCategories.values
+                            .expand((category) => category)
+                            .firstWhere(
+                              (ex) => ex['name'] == exercise['type'],
+                          orElse: () => {'icon': Icons.directions_run},
+                        )['icon'] as IconData,
+                        color: AppTheme.primaryPurple,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            exercise['type'],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${exercise['duration']} นาที · ${exercise['calories']} แคลอรี่',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          exercise['date'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          exercise['time'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeeklySummary() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'สถิติรายสัปดาห์',
+            style: AppTextStyle.titleMedium(context).copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildWeeklyStatItem('แคลอรี่รวม', '${_weeklyStats['totalCalories']} kcal'),
+              _buildWeeklyStatItem('เวลาทั้งหมด', '${_weeklyStats['totalDuration']} นาที'),
+              _buildWeeklyStatItem('เฉลี่ยต่อวัน', '${_weeklyStats['averagePerDay']} kcal'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: Colors.grey[200]),
+          const SizedBox(height: 16),
+          Text(
+            'กิจกรรมที่นิยมมากที่สุด: ${_weeklyStats['mostPopularExercise']}',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'จำนวนวันติดต่อกัน: ${_weeklyStats['streakDays']} วัน',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeeklyStatItem(String title, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryPurple,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
 }
+
