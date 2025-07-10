@@ -521,34 +521,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
             ),
           ] : null,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              goalData['icon'],
-              color: isSelected ? Colors.white : goalData['color'],
-              size: 32,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              goalData['title'],
-              style: AppTextStyle.bodyMedium(context).copyWith(
-                color: isSelected ? Colors.white : Colors.grey[800],
-                fontWeight: FontWeight.bold,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                goalData['icon'],
+                color: isSelected ? Colors.white : goalData['color'],
+                size: 52,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              goalData['description'],
-              style: AppTextStyle.bodySmall(context).copyWith(
-                color: isSelected ? Colors.white.withValues(alpha: 0.9) : Colors.grey[600],
+              const SizedBox(height: 8),
+              Text(
+                goalData['title'],
+                style: AppTextStyle.bodyMedium(context).copyWith(
+                  color: isSelected ? Colors.white : Colors.grey[800],
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                goalData['description'],
+                style: AppTextStyle.bodySmall(context).copyWith(
+                  color: isSelected ? Colors.white.withValues(alpha: 0.9) : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );

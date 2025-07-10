@@ -99,14 +99,6 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
         const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(
-            Icons.settings,
-            color: AppTheme.textPrimary,
-          ),
-          onPressed: onSettingsTap,
-        ),
-        const SizedBox(width: 8),
       ],
     );
   }

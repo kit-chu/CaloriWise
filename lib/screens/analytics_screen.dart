@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_style.dart';
 import 'chat_screen.dart';
@@ -14,6 +15,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   String _selectedPeriod = 'สัปดาห์';
+  bool _isKeyboardVisible = false;
+  bool _isChatTyping = false;
 
   // Sample data for analytics
   final Map<String, dynamic> _analyticsData = {
@@ -126,6 +129,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
+    // Listen for tab changes to dismiss keyboard
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        // Dismiss keyboard when switching tabs
+        FocusScope.of(context).unfocus();
+        SystemChannels.textInput.invokeMethod('TextInput.hide');
+
+        // Reset chat typing state when leaving chat tab
+        if (_tabController.previousIndex == 1) {
+          setState(() {
+            _isChatTyping = false;
+          });
+        }
+      }
+    });
   }
 
   @override
@@ -136,17 +155,46 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Check if keyboard is visible
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = keyboardHeight > 0;
+
+    // Update keyboard visibility state
+    if (_isKeyboardVisible != isKeyboardVisible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _isKeyboardVisible = isKeyboardVisible;
+
+          // If in chat tab and keyboard is visible, set chat typing to true
+          if (_tabController.index == 1 && isKeyboardVisible) {
+            _isChatTyping = true;
+          }
+          // If keyboard is dismissed, reset chat typing after a delay
+          else if (!isKeyboardVisible && _isChatTyping) {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                setState(() {
+                  _isChatTyping = false;
+                });
+              }
+            });
+          }
+        });
+      });
+    }
+
     return Scaffold(
       body: Column(
         children: [
-          _buildHeader(),
-          _buildTabBar(),
+          // Hide TabBar when typing in chat
+          if (!(_tabController.index == 1 && _isChatTyping))
+            _buildTabBar(),
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
                 _buildAnalyticsTab(),
-                const ChatScreen(),
+                _buildChatTabWithHeader(),
               ],
             ),
           ),
@@ -250,24 +298,41 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   Widget _buildTabBar() {
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF8FAFC), // Light gray-blue
+            Color(0xFFF1F5F9), // Slightly darker gray-blue
+          ],
+        ),
+      ),
+      height: 60, // Add height constraint to make TabBar smaller
       child: TabBar(
         controller: _tabController,
         labelColor: AppTheme.primaryPurple,
         unselectedLabelColor: Colors.grey[600],
         indicatorColor: AppTheme.primaryPurple,
-        indicatorWeight: 3,
-        labelStyle: AppTextStyle.titleSmall(context).copyWith(
+        indicatorWeight: 2, // Reduced from 3 to 2
+        labelStyle: AppTextStyle.bodyMedium(context).copyWith( // Changed from titleSmall to bodyMedium
           fontWeight: FontWeight.w600,
+          fontSize: 12, // Explicit smaller font size
+        ),
+        unselectedLabelStyle: AppTextStyle.bodyMedium(context).copyWith(
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
         ),
         tabs: const [
           Tab(
-            icon: Icon(Icons.bar_chart, size: 24),
+            icon: Icon(Icons.bar_chart, size: 18), // Reduced from 24 to 18
             text: 'วิเคราะห์',
+            height: 50, // Add explicit height for each tab
           ),
           Tab(
-            icon: Icon(Icons.chat, size: 24),
+            icon: Icon(Icons.chat, size: 18), // Reduced from 24 to 18
             text: 'AI Chat',
+            height: 50, // Add explicit height for each tab
           ),
         ],
       ),
@@ -280,22 +345,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   Widget _buildAnalyticsTab() {
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.zero,
       children: [
-        _buildAIInsightCard(),
-        const SizedBox(height: 20),
-        _buildPredictionsCard(),
-        const SizedBox(height: 20),
-        _buildOverallScoreCard(),
-        const SizedBox(height: 20),
-        _buildBehaviorAnalysisCard(),
-        const SizedBox(height: 20),
-        _buildAIRecommendationsCard(),
-        const SizedBox(height: 20),
-        _buildWeeklyPatternCard(),
-        const SizedBox(height: 20),
-        _buildProgressSummaryCard(),
-        const SizedBox(height: 100),
+        _buildHeader(),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              _buildAIInsightCard(),
+              const SizedBox(height: 20),
+              _buildPredictionsCard(),
+              const SizedBox(height: 20),
+              _buildOverallScoreCard(),
+              const SizedBox(height: 20),
+              _buildBehaviorAnalysisCard(),
+              const SizedBox(height: 20),
+              _buildAIRecommendationsCard(),
+              const SizedBox(height: 20),
+              _buildWeeklyPatternCard(),
+              const SizedBox(height: 20),
+              _buildProgressSummaryCard(),
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -827,13 +900,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.calendar_view_week, color: AppTheme.primaryPurple),
+                const Icon(Icons.calendar_view_week, color: AppTheme.primaryPurple),
                 const SizedBox(width: 8),
                 Text(
                   'AI วิเคราะห์รูปแบบรายสัปดาห์',
@@ -1056,6 +1129,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       ),
     );
   }
+
+  // =================================================================
+  // CHAT TAB WITH HEADER
+  // =================================================================
+
+  Widget _buildChatTabWithHeader() {
+    return Column(
+      children: [
+        // Show AI chat header only when not typing
+        Expanded(
+          child: const ChatScreen(),
+        ),
+      ],
+    );
+  }
+
 
   // =================================================================
   // HELPER FUNCTIONS

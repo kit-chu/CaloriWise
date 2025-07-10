@@ -13,7 +13,7 @@ class CaloriWiseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CalorieWiseApp',
+      title: 'Calorie',
       theme: AppTheme.lightTheme.copyWith(
         appBarTheme: AppTheme.lightTheme.appBarTheme.copyWith(
           elevation: 0,
@@ -69,7 +69,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppTopBar(
-        title: _titles[_currentIndex],
+        title: "Calorie",
         streakDays: 5, // ค่าตัวอย่าง - สามารถเปลี่ยนเป็น dynamic ได้
         heartRate: 75, // ค่าตัวอย่าง - สามารถเปลี่ยนเป็น dynamic ได้
         onSettingsTap: () {

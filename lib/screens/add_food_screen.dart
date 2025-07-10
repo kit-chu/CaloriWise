@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_style.dart';
-import 'review_food_screen.dart';
+import '../services/data_cache_service.dart';
 
 class AddFoodScreen extends StatefulWidget {
   const AddFoodScreen({super.key});
@@ -13,6 +13,11 @@ class AddFoodScreen extends StatefulWidget {
 class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateMixin {
   late PageController _pageController;
   int _currentPage = 0;
+
+  // Animation controllers for smooth page transitions
+  late AnimationController _tabAnimationController;
+  late Animation<double> _tabAnimation;
+  late AnimationController _pageTransitionController;
 
   // Controllers for manual entry
   final _foodNameController = TextEditingController();
@@ -29,28 +34,136 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
 
   final List<String> _mealTypes = ['มื้อเช้า', 'มื้อกลางวัน', 'มื้อเย็น', 'ของว่าง'];
 
-  // Popular food database
-  final List<Map<String, dynamic>> _popularFoods = [
-    {'name': 'ข้าวผัด', 'calories': 350, 'icon': '🍳', 'category': 'อาหารไทย'},
-    {'name': 'ผัดไทย', 'calories': 300, 'icon': '🍜', 'category': 'อาหารไทย'},
-    {'name': 'ส้มตำ', 'calories': 120, 'icon': '🥗', 'category': 'อาหารไทย'},
-    {'name': 'ต้มยำกุ้ง', 'calories': 180, 'icon': '🍲', 'category': 'อาหารไทย'},
-    {'name': 'แกงเขียวหวาน', 'calories': 250, 'icon': '🍛', 'category': 'อาหารไทย'},
+  // Data caching service
+  final DataCacheService _cacheService = DataCacheService();
 
-    {'name': 'แฮมเบอร์เกอร์', 'calories': 540, 'icon': '🍔', 'category': 'ฟาสต์ฟู้ด'},
-    {'name': 'พิซซ่า (1 ชิ้น)', 'calories': 280, 'icon': '🍕', 'category': 'ฟาสต์ฟู้ด'},
-    {'name': 'เฟรนช์ฟรายส์', 'calories': 320, 'icon': '🍟', 'category': 'ฟาสต์ฟู้ด'},
+  // Loading states
+  bool _isLoadingPopularFoods = false;
+  bool _isLoadingFavorites = false;
 
-    {'name': 'สลัดผัก', 'calories': 150, 'icon': '🥗', 'category': 'เพื่อสุขภาพ'},
-    {'name': 'โยเกิร์ต', 'calories': 100, 'icon': '🥛', 'category': 'เพื่อสุขภาพ'},
-    {'name': 'กล้วย', 'calories': 90, 'icon': '🍌', 'category': 'ผลไม้'},
-    {'name': 'แอปเปิ้ล', 'calories': 80, 'icon': '🍎', 'category': 'ผลไม้'},
-  ];
+  // Popular food database with caching
+  List<Map<String, dynamic>> _popularFoods = [];
+  List<Map<String, dynamic>> _favoriteFoods = [];
+
+  // Mock data for dates with food entries
+  Set<DateTime> _datesWithEntries = {};
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+
+    // Initialize animation controllers
+    _tabAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _tabAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _tabAnimationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _pageTransitionController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _loadCachedData();
+    _generateMockDatesWithEntries();
+  }
+
+  void _generateMockDatesWithEntries() {
+    final now = DateTime.now();
+    _datesWithEntries = {
+      DateTime(now.year, now.month, now.day - 2),
+      DateTime(now.year, now.month, now.day - 1),
+      DateTime(now.year, now.month, now.day),
+      DateTime(now.year, now.month, now.day + 1),
+    };
+  }
+
+  // Load cached data on screen init
+  void _loadCachedData() {
+    _loadPopularFoodsWithCache();
+    _loadFavoriteFoodsWithCache();
+  }
+
+  Future<void> _loadPopularFoodsWithCache() async {
+    if (_isLoadingPopularFoods) return;
+
+    // Check cache first
+    final cachedFoods = _cacheService.getCachedPopularFoods();
+    if (cachedFoods != null) {
+      setState(() {
+        _popularFoods = cachedFoods;
+      });
+      return;
+    }
+
+    // Load from "server"
+    setState(() => _isLoadingPopularFoods = true);
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _generatePopularFoods();
+      _cacheService.setCachedPopularFoods(_popularFoods);
+    } finally {
+      setState(() => _isLoadingPopularFoods = false);
+    }
+  }
+
+  Future<void> _loadFavoriteFoodsWithCache() async {
+    if (_isLoadingFavorites) return;
+
+    // Check cache first
+    final cachedFavorites = _cacheService.getCachedFavoriteFoods();
+    if (cachedFavorites != null) {
+      setState(() {
+        _favoriteFoods = cachedFavorites;
+      });
+      return;
+    }
+
+    // Load from "server"
+    setState(() => _isLoadingFavorites = true);
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 200));
+      _generateFavoriteFoods();
+      _cacheService.setCachedFavoriteFoods(_favoriteFoods);
+    } finally {
+      setState(() => _isLoadingFavorites = false);
+    }
+  }
+
+  void _generatePopularFoods() {
+    _popularFoods = [
+      {'name': 'ข้าวผัด', 'calories': 350, 'icon': '🍳', 'category': 'อาหารไทย'},
+      {'name': 'ผัดไทย', 'calories': 300, 'icon': '🍜', 'category': 'อาหารไทย'},
+      {'name': 'ส้มตำ', 'calories': 120, 'icon': '🥗', 'category': 'อาหารไทย'},
+      {'name': 'ต้มยำกุ้ง', 'calories': 180, 'icon': '🍲', 'category': 'อาหารไทย'},
+      {'name': 'แกงเขียวหวาน', 'calories': 250, 'icon': '🍛', 'category': 'อาหารไทย'},
+
+      {'name': 'แฮมเบอร์เกอร์', 'calories': 540, 'icon': '🍔', 'category': 'ฟาสต์ฟู้ด'},
+      {'name': 'พิซซ่า (1 ชิ้น)', 'calories': 280, 'icon': '🍕', 'category': 'ฟาสต์ฟู้ด'},
+      {'name': 'เฟรนช์ฟรายส์', 'calories': 320, 'icon': '🍟', 'category': 'ฟาสต์ฟู้ด'},
+
+      {'name': 'สลัดผัก', 'calories': 150, 'icon': '🥗', 'category': 'เพื่อสุขภาพ'},
+      {'name': 'โยเกิร์ต', 'calories': 100, 'icon': '🥛', 'category': 'เพื่อสุขภาพ'},
+      {'name': 'กล้วย', 'calories': 90, 'icon': '🍌', 'category': 'ผลไม้'},
+      {'name': 'แอปเปิ้ล', 'calories': 80, 'icon': '🍎', 'category': 'ผลไม้'},
+    ];
+  }
+
+  void _generateFavoriteFoods() {
+    _favoriteFoods = [
+      {'name': 'ข้าวผัดแม่ทำ', 'calories': 380, 'icon': '🍳'},
+      {'name': 'ส้มตำบ้านๆ', 'calories': 150, 'icon': '🥗'},
+      {'name': 'กาแฟเย็น', 'calories': 120, 'icon': '☕'},
+    ];
   }
 
   @override
@@ -59,43 +172,134 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
     _foodNameController.dispose();
     _caloriesController.dispose();
     _searchController.dispose();
+    _tabAnimationController.dispose();
+    _pageTransitionController.dispose();
     super.dispose();
+  }
+
+  String _getMealTypeInThai() {
+    return _selectedMealType;
+  }
+
+  String _getDateDisplayText() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selected = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+
+    if (selected == today) {
+      return 'วันนี้';
+    } else if (selected == today.subtract(const Duration(days: 1))) {
+      return 'เมื่อวาน';
+    } else if (selected == today.add(const Duration(days: 1))) {
+      return 'พรุ่งนี้';
+    } else {
+      return '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundLight,
-      // ใช้ resizeToAvoidBottomInset เพื่อจัดการ keyboard
-      resizeToAvoidBottomInset: true,
-      body: Column(
-        children: [
-          // Compact Header with Date & Meal Info
-          _buildCompactHeader(),
-          // Bottom Navigation Style Tabs
-          _buildBottomNavTabs(),
-          // Page Content
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              children: [
-                _buildQuickAddPage(),
-                _buildAIPage(),
-                _buildManualPage(),
-              ],
+    return GestureDetector(
+      onTap: () {
+        // Hide keyboard when tapping outside
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.backgroundLight,
+        resizeToAvoidBottomInset: true,
+        body: Column(
+          children: [
+            // Top Bar พร้อมปุ่มย้อนกลับ
+            _buildTopBar(),
+            // Bottom Navigation Style Tabs
+            _buildBottomNavTabs(),
+            // Page Content
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const ClampingScrollPhysics(),
+                onPageChanged: (index) {
+                  // Hide keyboard when changing tabs
+                  FocusScope.of(context).unfocus();
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                children: [
+                  _buildQuickAddPage(),
+                  _buildAIPage(),
+                  _buildManualPage(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCompactHeader() {
+  Widget _buildTopBar() {
+    return Container(
+      color: Colors.white,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          child: Row(
+            children: [
+              // ปุ่มย้อนกลับ
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryPurple.withAlpha(25),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_ios_new),
+                  color: AppTheme.primaryPurple,
+                  iconSize: 18,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Title
+              Expanded(
+                child: Text(
+                  'เพิ่มอาหาร',
+                  style: AppTextStyle.titleLarge(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+              // ปุ่มค้นหา
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryPurple.withAlpha(25),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    // Show search functionality
+                  },
+                  icon: const Icon(Icons.search),
+                  color: AppTheme.primaryPurple,
+                  iconSize: 18,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImprovedHeader() {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -105,29 +309,45 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
         ),
       ),
       child: SafeArea(
+        top: false,
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             children: [
-              // Title Row
+              // Date and Current View Info
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      'เพิ่มอาหาร',
-                      style: AppTextStyle.titleLarge(context).copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'เพิ่มอาหารสำหรับ',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_getDateDisplayText()} • ${_getMealTypeInThai()}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  // Date Button
+                  // Compact Date Button
                   InkWell(
-                    onTap: _showDatePicker,
+                    onTap: _showImprovedDatePicker,
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -143,11 +363,11 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '${_selectedDate.day}/${_selectedDate.month}',
+                            'เปลี่ยน',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontSize: 12,
                             ),
                           ),
                         ],
@@ -156,9 +376,9 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Meal Type Chips
+              // Meal Type Chips - เล็กลง
               SizedBox(
                 height: 32,
                 child: ListView.separated(
@@ -171,14 +391,15 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                     return GestureDetector(
                       onTap: () => setState(() => _selectedMealType = type),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Colors.white
-                              : Colors.white.withOpacity(0.2),
+                              : Colors.white.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: Colors.white.withOpacity(0.3),
+                            width: 1,
                           ),
                         ),
                         child: Text(
@@ -235,7 +456,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
           );
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
@@ -249,14 +470,14 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
               Icon(
                 icon,
                 color: isSelected ? AppTheme.primaryPurple : Colors.grey[600],
-                size: 20,
+                size: 24,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
                   color: isSelected ? AppTheme.primaryPurple : Colors.grey[600],
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
@@ -267,13 +488,242 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
     );
   }
 
-  // Page 1: Quick Add with Search & Categories
+  // Improved Date Picker
+  void _showImprovedDatePicker() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, color: AppTheme.primaryPurple, size: 24),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'เลือกวันที่',
+                        style: AppTextStyle.titleMedium(context).copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                      iconSize: 20,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Current selection info
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryPurple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'วันที่เลือก',
+                        style: TextStyle(
+                          color: AppTheme.primaryPurple,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_getDateDisplayText()} (${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year})',
+                        style: TextStyle(
+                          color: AppTheme.primaryPurple,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Quick date selection
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'เลือกวันที่',
+                      style: AppTextStyle.titleSmall(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._buildQuickDateOptions(),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Custom date picker button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                        lastDate: DateTime.now().add(const Duration(days: 7)),
+                      );
+                      if (picked != null) {
+                        setState(() => _selectedDate = picked);
+                      }
+                    },
+                    icon: const Icon(Icons.date_range),
+                    label: const Text('เลือกวันที่อื่น'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primaryPurple,
+                      side: BorderSide(color: AppTheme.primaryPurple),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildQuickDateOptions() {
+    final now = DateTime.now();
+    final options = [
+      {
+        'date': now.subtract(const Duration(days: 1)),
+        'label': 'เมื่อวาน',
+        'subtitle': '${now.subtract(const Duration(days: 1)).day}/${now.subtract(const Duration(days: 1)).month}',
+      },
+      {
+        'date': now,
+        'label': 'วันนี้',
+        'subtitle': '${now.day}/${now.month}',
+      },
+      {
+        'date': now.add(const Duration(days: 1)),
+        'label': 'พรุ่งนี้',
+        'subtitle': '${now.add(const Duration(days: 1)).day}/${now.add(const Duration(days: 1)).month}',
+      },
+    ];
+
+    return options.map((option) {
+      final date = option['date'] as DateTime;
+      final label = option['label'] as String;
+      final subtitle = option['subtitle'] as String;
+      final isSelected = DateTime(date.year, date.month, date.day) ==
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      final hasEntries = _datesWithEntries.contains(DateTime(date.year, date.month, date.day));
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: InkWell(
+          onTap: () {
+            setState(() => _selectedDate = date);
+            Navigator.pop(context);
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isSelected ? AppTheme.primaryPurple.withOpacity(0.1) : Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? AppTheme.primaryPurple : Colors.grey[200]!,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  color: isSelected ? AppTheme.primaryPurple : Colors.grey[600],
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            label,
+                            style: TextStyle(
+                              color: isSelected ? AppTheme.primaryPurple : Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          if (hasEntries) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (hasEntries)
+                        Text(
+                          'มีรายการอาหาร',
+                          style: TextStyle(
+                            color: Colors.green[600],
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    color: AppTheme.primaryPurple,
+                    size: 20,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+  // Page 1: Quick Add
   Widget _buildQuickAddPage() {
     return Column(
       children: [
-        // Search Section
+        // Show improved header only in first tab
+        _buildImprovedHeader(),
         _buildSearchSection(),
-        // Categories & Results
         Expanded(
           child: _buildCategoriesAndResults(),
         ),
@@ -283,7 +733,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
 
   Widget _buildSearchSection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -300,20 +750,19 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
           Container(
             decoration: BoxDecoration(
               color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.grey[200]!),
             ),
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
-                setState(() {
-                  // Trigger search
-                });
+                setState(() {});
               },
+              style: const TextStyle(fontSize: 16),
               decoration: InputDecoration(
                 hintText: 'ค้นหาอาหาร เช่น "ข้าวผัด", "ไก่ทอด"...',
-                hintStyle: TextStyle(color: Colors.grey[500]),
-                prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
+                prefixIcon: Icon(Icons.search, color: Colors.grey[600], size: 24),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                   icon: Icon(Icons.clear, color: Colors.grey[600]),
@@ -324,14 +773,14 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                 )
                     : null,
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
           ),
 
           // Quick Search Suggestions
           if (_searchController.text.isEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -340,7 +789,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                     'ค้นหาด่วน: ',
                     style: TextStyle(
                       color: Colors.grey[600],
-                      fontSize: 12,
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -358,10 +807,10 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                         setState(() {});
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryPurple.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: AppTheme.primaryPurple.withOpacity(0.2),
                           ),
@@ -370,7 +819,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                           term,
                           style: TextStyle(
                             color: AppTheme.primaryPurple,
-                            fontSize: 11,
+                            fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -394,15 +843,12 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
 
     // Show categories and favorites
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // My Favorites
           _buildMyFavorites(),
-          const SizedBox(height: 24),
-
-          // Food Categories
+          const SizedBox(height: 32),
           _buildFoodCategories(),
         ],
       ),
@@ -417,9 +863,8 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
 
     return Column(
       children: [
-        // Search Results Header
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             color: Colors.blue[50],
             border: Border(
@@ -428,7 +873,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
           ),
           child: Row(
             children: [
-              Icon(Icons.search, color: Colors.blue[600], size: 18),
+              Icon(Icons.search, color: Colors.blue[600], size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -436,21 +881,20 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                   style: AppTextStyle.titleSmall(context).copyWith(
                     color: Colors.blue[700],
                     fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
               ),
             ],
           ),
         ),
-
-        // Search Results List
         Expanded(
           child: results.isEmpty
               ? _buildNoSearchResults()
               : ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             itemCount: results.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final food = results[index];
               return _buildSearchResultCard(food);
@@ -464,32 +908,33 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
   Widget _buildNoSearchResults() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.search_off,
-              size: 64,
+              size: 80,
               color: Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               'ไม่พบอาหารที่ค้นหา',
               style: AppTextStyle.titleMedium(context).copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               'ลองค้นหาด้วยคำอื่น หรือเพิ่มอาหารใหม่ในแท็บ "กรอกเอง"',
-              style: AppTextStyle.bodySmall(context).copyWith(
+              style: AppTextStyle.bodyMedium(context).copyWith(
                 color: Colors.grey[500],
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: () {
                 _pageController.animateToPage(2,
@@ -497,11 +942,12 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                     curve: Curves.easeInOut
                 );
               },
-              icon: const Icon(Icons.add),
-              label: const Text('เพิ่มอาหารใหม่'),
+              icon: const Icon(Icons.add, size: 20),
+              label: const Text('เพิ่มอาหารใหม่', style: TextStyle(fontSize: 16)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.primaryPurple,
                 side: BorderSide(color: AppTheme.primaryPurple),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
           ],
@@ -514,10 +960,10 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
     return GestureDetector(
       onTap: () => _showQuickAddConfirmation(food),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Colors.grey[200]!),
           boxShadow: [
             BoxShadow(
@@ -529,189 +975,63 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
         ),
         child: Row(
           children: [
-            // Food Icon
             Container(
-              width: 48,
-              height: 48,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 color: AppTheme.primaryPurple.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
                 child: Text(
                   food['icon'],
-                  style: const TextStyle(fontSize: 20),
+                  style: const TextStyle(fontSize: 24),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-
-            // Food Info
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     food['name'],
-                    style: AppTextStyle.bodyMedium(context).copyWith(
+                    style: AppTextStyle.bodyLarge(context).copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     food['category'],
-                    style: AppTextStyle.bodySmall(context).copyWith(
+                    style: AppTextStyle.bodyMedium(context).copyWith(
                       color: Colors.grey[600],
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Calories
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 '${food['calories']} kcal',
-                style: AppTextStyle.bodySmall(context).copyWith(
+                style: AppTextStyle.bodyMedium(context).copyWith(
                   color: Colors.orange[700],
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Icon(
               Icons.add_circle_outline,
               color: AppTheme.primaryPurple,
-              size: 20,
+              size: 24,
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildFoodCategories() {
-    final categories = _popularFoods
-        .map((food) => food['category'] as String)
-        .toSet()
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.category, color: AppTheme.primaryPurple, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              'หมวดหมู่อาหาร',
-              style: AppTextStyle.titleSmall(context).copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // Category Cards
-        ...categories.map((category) => _buildCategorySection(category)),
-      ],
-    );
-  }
-
-  Widget _buildCategorySection(String category) {
-    final categoryFoods = _popularFoods
-        .where((food) => food['category'] == category)
-        .toList();
-
-    // Category icons
-    final categoryIcons = {
-      'อาหารไทย': '🇹🇭',
-      'ฟาสต์ฟู้ด': '🍔',
-      'เพื่อสุขภาพ': '🥗',
-      'ผลไม้': '🍎',
-      'เครื่องดื่ม': '🥤',
-    };
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        children: [
-          // Category Header
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey[200]!),
-              ),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  categoryIcons[category] ?? '🍽️',
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    category,
-                    style: AppTextStyle.titleSmall(context).copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryPurple.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${categoryFoods.length}',
-                    style: TextStyle(
-                      color: AppTheme.primaryPurple,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Category Foods
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 2.8,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 6,
-              ),
-              itemCount: categoryFoods.length,
-              itemBuilder: (context, index) {
-                final food = categoryFoods[index];
-                return _buildFoodCard(food);
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -728,11 +1048,11 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
       children: [
         Row(
           children: [
-            Icon(Icons.bookmark, color: AppTheme.primaryPurple, size: 18),
-            const SizedBox(width: 6),
+            Icon(Icons.bookmark, color: AppTheme.primaryPurple, size: 20),
+            const SizedBox(width: 8),
             Text(
               'เมนูประจำ',
-              style: AppTextStyle.titleSmall(context).copyWith(
+              style: AppTextStyle.titleMedium(context).copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -743,21 +1063,20 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                 'จัดการ',
                 style: TextStyle(
                   color: AppTheme.primaryPurple,
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-
+        const SizedBox(height: 16),
         SizedBox(
-          height: 80,
+          height: 100,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: myFavorites.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            separatorBuilder: (context, index) => const SizedBox(width: 16),
             itemBuilder: (context, index) {
               final food = myFavorites[index];
               return _buildFavoriteCard(food);
@@ -772,8 +1091,8 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
     return GestureDetector(
       onTap: () => _showQuickAddConfirmation(food),
       child: Container(
-        width: 100,
-        padding: const EdgeInsets.all(8),
+        width: 120,
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -783,65 +1102,152 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
               AppTheme.primaryPurple.withOpacity(0.05),
             ],
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppTheme.primaryPurple.withOpacity(0.2)),
         ),
-        child: Column(
-          children: [
-            Text(food['icon'], style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 4),
-            Text(
-              food['name'],
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            children: [
+              Text(food['icon'], style: const TextStyle(fontSize: 24)),
+              const SizedBox(height: 6),
+              Text(
+                food['name'],
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              '${food['calories']} kcal',
-              style: TextStyle(
-                fontSize: 9,
-                color: AppTheme.primaryPurple,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 4),
+              Text(
+                '${food['calories']} kcal',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.primaryPurple,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPopularFoodsGrid() {
+  Widget _buildFoodCategories() {
+    final categories = _popularFoods
+        .map((food) => food['category'] as String)
+        .toSet()
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'อาหารยอดนิยม',
-          style: AppTextStyle.titleSmall(context).copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          children: [
+            Icon(Icons.category, color: AppTheme.primaryPurple, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'หมวดหมู่อาหาร',
+              style: AppTextStyle.titleMedium(context).copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 2.8,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 8,
-          ),
-          itemCount: _popularFoods.take(6).length, // Show only top 6
-          itemBuilder: (context, index) {
-            final food = _popularFoods[index];
-            return _buildFoodCard(food);
-          },
-        ),
+        const SizedBox(height: 16),
+        ...categories.map((category) => _buildCategorySection(category)),
       ],
+    );
+  }
+
+  Widget _buildCategorySection(String category) {
+    final categoryFoods = _popularFoods
+        .where((food) => food['category'] == category)
+        .toList();
+
+    final categoryIcons = {
+      'อาหารไทย': '🇹🇭',
+      'ฟาสต์ฟู้ด': '🍔',
+      'เพื่อสุขภาพ': '🥗',
+      'ผลไม้': '🍎',
+      'เครื่องดื่ม': '🥤',
+    };
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              border: Border(
+                bottom: BorderSide(color: Colors.grey[200]!),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  categoryIcons[category] ?? '🍽️',
+                  style: const TextStyle(fontSize: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    category,
+                    style: AppTextStyle.titleMedium(context).copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryPurple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${categoryFoods.length}',
+                    style: TextStyle(
+                      color: AppTheme.primaryPurple,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 2.5,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: categoryFoods.length,
+              itemBuilder: (context, index) {
+                final food = categoryFoods[index];
+                return _buildFoodCard(food);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -849,16 +1255,16 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
     return GestureDetector(
       onTap: () => _showQuickAddConfirmation(food),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.grey[200]!),
         ),
         child: Row(
           children: [
-            Text(food['icon'], style: const TextStyle(fontSize: 16)),
-            const SizedBox(width: 8),
+            Text(food['icon'], style: const TextStyle(fontSize: 18)),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -867,16 +1273,17 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                   Text(
                     food['name'],
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     '${food['calories']} kcal',
                     style: TextStyle(
-                      fontSize: 9,
+                      fontSize: 11,
                       color: AppTheme.primaryPurple,
                       fontWeight: FontWeight.bold,
                     ),
@@ -893,53 +1300,52 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
   // Page 2: AI Camera
   Widget _buildAIPage() {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (!_isAnalyzing && !_analysisComplete) ...[
             Container(
-              width: 160,
-              height: 160,
+              width: 180,
+              height: 180,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.primaryPurple, width: 3),
+                border: Border.all(color: AppTheme.primaryPurple, width: 4),
                 color: AppTheme.primaryPurple.withOpacity(0.1),
               ),
               child: InkWell(
                 onTap: _startAIAnalysis,
-                borderRadius: BorderRadius.circular(80),
+                borderRadius: BorderRadius.circular(90),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.camera_alt,
-                      size: 50,
+                      size: 60,
                       color: AppTheme.primaryPurple,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
                       'ถ่ายรูป',
                       style: TextStyle(
                         color: AppTheme.primaryPurple,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 18,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Text(
               'AI จะวิเคราะห์และคำนวณแคลอรี่ให้อัตโนมัติ',
-              style: AppTextStyle.bodyMedium(context).copyWith(
+              style: AppTextStyle.bodyLarge(context).copyWith(
                 color: AppTheme.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
           ],
-
           if (_isAnalyzing) _buildAnalyzingState(),
           if (_analysisComplete) _buildAIResult(),
         ],
@@ -951,17 +1357,17 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
     return Column(
       children: [
         SizedBox(
-          width: 60,
-          height: 60,
+          width: 80,
+          height: 80,
           child: CircularProgressIndicator(
-            strokeWidth: 4,
+            strokeWidth: 5,
             valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryPurple),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Text(
           'กำลังวิเคราะห์...',
-          style: AppTextStyle.titleMedium(context).copyWith(
+          style: AppTextStyle.titleLarge(context).copyWith(
             color: AppTheme.primaryPurple,
             fontWeight: FontWeight.bold,
           ),
@@ -975,23 +1381,22 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
       children: [
         Container(
           width: double.infinity,
-          height: 140,
+          height: 160,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             image: const DecorationImage(
               image: NetworkImage('https://picsum.photos/400/300'),
               fit: BoxFit.cover,
             ),
           ),
         ),
-        const SizedBox(height: 16),
-
+        const SizedBox(height: 20),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -1004,28 +1409,29 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
             children: [
               Text(
                 'ข้าวผัดกุ้ง',
-                style: AppTextStyle.titleMedium(context).copyWith(
+                style: AppTextStyle.titleLarge(context).copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 '350 แคลอรี่',
                 style: AppTextStyle.titleLarge(context).copyWith(
                   color: AppTheme.primaryPurple,
                   fontWeight: FontWeight.bold,
+                  fontSize: 24,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _confirmAIResult,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryPurple,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(
@@ -1033,6 +1439,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                 ),
@@ -1047,52 +1454,50 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
   // Page 3: Manual Entry
   Widget _buildManualPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Photo Section
           _buildPhotoSection(),
-          const SizedBox(height: 16),
-
-          // Food Name Input
+          const SizedBox(height: 20),
           TextField(
             controller: _foodNameController,
+            style: const TextStyle(fontSize: 16),
             decoration: InputDecoration(
               labelText: 'ชื่ออาหาร',
+              labelStyle: const TextStyle(fontSize: 16),
               hintText: 'เช่น ข้าวผัดแม่ทำ',
-              prefixIcon: Icon(Icons.restaurant, color: AppTheme.primaryPurple),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              hintStyle: const TextStyle(fontSize: 16),
+              prefixIcon: Icon(Icons.restaurant, color: AppTheme.primaryPurple, size: 24),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               filled: true,
               fillColor: Colors.grey[50],
+              contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Calories Input
+          const SizedBox(height: 20),
           TextField(
             controller: _caloriesController,
+            style: const TextStyle(fontSize: 16),
             decoration: InputDecoration(
               labelText: 'แคลอรี่ (kcal)',
-              prefixIcon: Icon(Icons.local_fire_department, color: Colors.orange),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              labelStyle: const TextStyle(fontSize: 16),
+              prefixIcon: Icon(Icons.local_fire_department, color: Colors.orange, size: 24),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               filled: true,
               fillColor: Colors.orange.withOpacity(0.05),
+              contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
             ),
             keyboardType: TextInputType.number,
           ),
-          const SizedBox(height: 16),
-
-          // Quick Calorie Buttons
+          const SizedBox(height: 20),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 12,
+            runSpacing: 12,
             children: ['100', '200', '300', '400', '500'].map((cal) =>
                 _buildQuickCalorieChip('$cal kcal')
             ).toList(),
           ),
-          const SizedBox(height: 24),
-
-          // Submit Buttons
+          const SizedBox(height: 32),
           Column(
             children: [
               SizedBox(
@@ -1101,9 +1506,9 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                   onPressed: _submitManualFood,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryPurple,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: const Text(
@@ -1111,23 +1516,24 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: _saveToFavorites,
-                  icon: const Icon(Icons.bookmark_add, size: 18),
-                  label: const Text('บันทึกเป็นเมนูประจำ'),
+                  icon: const Icon(Icons.bookmark_add, size: 20),
+                  label: const Text('บันทึกเป็นเมนูประจำ', style: TextStyle(fontSize: 16)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.primaryPurple,
                     side: BorderSide(color: AppTheme.primaryPurple),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
@@ -1142,23 +1548,23 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
   Widget _buildPhotoSection() {
     return Container(
       width: double.infinity,
-      height: 100,
+      height: 120,
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         color: Colors.grey[50],
       ),
       child: InkWell(
         onTap: _takePhoto,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_a_photo, size: 30, color: Colors.grey[600]),
-            const SizedBox(height: 4),
+            Icon(Icons.add_a_photo, size: 36, color: Colors.grey[600]),
+            const SizedBox(height: 8),
             Text(
               'ถ่ายรูปอาหาร (ไม่บังคับ)',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ],
         ),
@@ -1168,7 +1574,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
 
   Widget _buildQuickCalorieChip(String text) {
     return ActionChip(
-      label: Text(text),
+      label: Text(text, style: const TextStyle(fontSize: 14)),
       onPressed: () {
         final calories = text.replaceAll(' kcal', '');
         _caloriesController.text = calories;
@@ -1177,37 +1583,25 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
       labelStyle: TextStyle(
         color: AppTheme.primaryPurple,
         fontWeight: FontWeight.bold,
-        fontSize: 12,
+        fontSize: 14,
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );
   }
 
   // Helper Methods
-  void _showDatePicker() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 30)),
-      lastDate: DateTime.now().add(const Duration(days: 7)),
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
-
   void _showQuickAddConfirmation(Map<String, dynamic> food) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        contentPadding: const EdgeInsets.all(24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.all(28),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Food Icon (Large)
             Container(
-              width: 80,
-              height: 80,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 color: AppTheme.primaryPurple.withOpacity(0.1),
                 shape: BoxShape.circle,
@@ -1215,79 +1609,75 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
               child: Center(
                 child: Text(
                   food['icon'],
-                  style: const TextStyle(fontSize: 40),
+                  style: const TextStyle(fontSize: 48),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Food Name (Prominent)
+            const SizedBox(height: 20),
             Text(
               food['name'],
               style: AppTextStyle.titleLarge(context).copyWith(
                 fontWeight: FontWeight.bold,
+                fontSize: 22,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-
-            // Calories (Very Prominent)
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: Colors.orange.withOpacity(0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.local_fire_department, color: Colors.orange, size: 20),
-                  const SizedBox(width: 6),
+                  Icon(Icons.local_fire_department, color: Colors.orange, size: 24),
+                  const SizedBox(width: 8),
                   Text(
                     '${food['calories']} แคลอรี่',
                     style: AppTextStyle.titleMedium(context).copyWith(
                       color: Colors.orange,
                       fontWeight: FontWeight.bold,
+                      fontSize: 18,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Meal Info
+            const SizedBox(height: 20),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 6),
+                      Icon(Icons.schedule, size: 18, color: Colors.grey[600]),
+                      const SizedBox(width: 8),
                       Text(
                         _selectedMealType,
-                        style: AppTextStyle.bodyMedium(context).copyWith(
+                        style: AppTextStyle.bodyLarge(context).copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 6),
+                      Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+                      const SizedBox(width: 8),
                       Text(
-                        '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                        style: AppTextStyle.bodySmall(context).copyWith(
+                        _getDateDisplayText(),
+                        style: AppTextStyle.bodyMedium(context).copyWith(
                           color: Colors.grey[600],
                         ),
                       ),
@@ -1296,18 +1686,16 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-
-            // Action Buttons
+            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       side: BorderSide(color: Colors.grey[400]!),
                     ),
@@ -1316,11 +1704,12 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                       style: TextStyle(
                         color: Colors.grey[700],
                         fontWeight: FontWeight.w500,
+                        fontSize: 16,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   flex: 2,
                   child: ElevatedButton.icon(
@@ -1329,19 +1718,20 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                       Navigator.pop(context, true);
                       _showSuccessSnackBar('เพิ่ม ${food['name']} สำเร็จ!');
                     },
-                    icon: const Icon(Icons.add_circle, color: Colors.white, size: 20),
+                    icon: const Icon(Icons.add_circle, color: Colors.white, size: 22),
                     label: const Text(
                       'เพิ่มอาหารนี้',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryPurple,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 2,
                     ),
@@ -1356,7 +1746,6 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
   }
 
   void _showManageFavorites() {
-    // Simplified management - go to manual tab
     _pageController.animateToPage(2, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -1408,30 +1797,32 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: [
-              Icon(Icons.bookmark_add, color: AppTheme.primaryPurple),
+              Icon(Icons.bookmark_add, color: AppTheme.primaryPurple, size: 24),
               const SizedBox(width: 8),
-              const Text('บันทึกเมนูประจำ'),
+              const Text('บันทึกเมนูประจำ', style: TextStyle(fontSize: 18)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('เมนู: ${_foodNameController.text}'),
-              Text('แคลอรี่: ${_caloriesController.text} kcal'),
-              const SizedBox(height: 12),
+              Text('เมนู: ${_foodNameController.text}', style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 4),
+              Text('แคลอรี่: ${_caloriesController.text} kcal', style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 16),
               Text(
                 'บันทึกเป็นเมนูประจำเพื่อเลือกใช้งานได้ง่ายในครั้งถัดไป',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('ยกเลิก'),
+              child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1439,8 +1830,11 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
                 Navigator.pop(context, true);
                 _showSuccessSnackBar('บันทึก "${_foodNameController.text}" เป็นเมนูประจำแล้ว!');
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryPurple),
-              child: const Text('บันทึก', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              child: const Text('บันทึก', style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ],
         ),
@@ -1458,9 +1852,12 @@ class _AddFoodScreenState extends State<AddFoodScreen> with TickerProviderStateM
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message, style: const TextStyle(fontSize: 16)),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
