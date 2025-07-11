@@ -58,9 +58,16 @@ For support or questions, please contact the developer at [your-email@example.co
 
 Below are some screenshots of CaloriWise in action:
 
-![App Logo](assets/images/app_logo.png)
-![Home Page](assets/images/page1.png)
-![Food Logging](assets/images/page2.png)
-![Progress Tracking](assets/images/page3.png)
-![Health Insights](assets/images/page4.png)
-![Reminders](assets/images/page5.png)
+<p align="center">
+  <img src="assets/images/app_logo.png" alt="App Logo" width="200" style="margin: 10px;"/>
+</p>
+
+<p align="center">
+  <img src="assets/images/page1.png" alt="Home Page" width="200" style="margin: 10px;"/>
+  <img src="assets/images/page2.png" alt="Food Logging" width="200" style="margin: 10px;"/>
+  <img src="assets/images/page3.png" alt="Progress Tracking" width="200" style="margin: 10px;"/>
+</p>
+<p align="center">
+  <img src="assets/images/page4.png" alt="Health Insights" width="200" style="margin: 10px;"/>
+  <img src="assets/images/page5.png" alt="Reminders" width="200" style="margin: 10px;"/>
+</p>
