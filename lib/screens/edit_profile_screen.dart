@@ -102,7 +102,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
 
   void _loadUserData() {
     // Load existing user data
-    _nameController.text = 'คุณกิตติคุณ';
+    _nameController.text = 'คุณสมชาย';
     _heightController.text = '175';
     _weightController.text = '67.5';
     _targetWeightController.text = '65';

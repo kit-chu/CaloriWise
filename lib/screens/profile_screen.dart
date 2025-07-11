@@ -22,7 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   // ========================================
 
   final Map<String, dynamic> _userData = {
-    'name': 'คุณกิตติคุณ',
+    'name': 'คุณสมชาย',
     'currentWeight': 67.5,
     'targetWeight': 65.0,
     'startWeight': 75.0,

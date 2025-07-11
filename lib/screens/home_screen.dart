@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
-    _tabController = TabController(length: 4, vsync: this); // เปลี่ยนเป็น 4 แท็บ
+    _tabController = TabController(length: 3, vsync: this); // เปลี่ยนจาก 4 เป็น 3 แท็บ
     _generateMockData();
     _generateMockMacroData();
     _generateMockFoodLogs();
@@ -353,10 +353,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: AppTheme.backgroundLight,
       body: Column(
         children: [
-          // Header ที่ไม่เปลี่ยนแปลง
-          _buildHeader(),
           // Tab Bar
-          _buildTabBar(),
+          SafeArea(
+            bottom: false,
+            child: _buildTabBar(),
+          ),
           // Tab Content
           Expanded(
             child: TabBarView(
@@ -364,8 +365,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 _buildOverviewTab(),
                 _buildNutritionTab(),
-                _buildActivityTab(),
-                _buildFoodLogTab(), // เพิ่มแท็บบันทึกอาหาร
+                _buildFoodLogTab(),
               ],
             ),
           ),
@@ -559,7 +559,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         tabs: const [
           Tab(text: 'ภาพรวม'),
           Tab(text: 'โภชนาการ'),
-          Tab(text: 'กิจกรรม'),
           Tab(text: 'บันทึกอาหาร'), // เพิ่มแท็บใหม่
         ],
       ),
@@ -569,51 +568,60 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // Tab 1: ภาพรวม - แคลอรี่และกิจกรรมล่าสุด
   Widget _buildOverviewTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Quick Stats Row
-          Row(
-            children: [
-              Expanded(
-                child: _buildQuickStatCard(
-                  'เผาผลาญ',
-                  '320 kcal',
-                  Icons.fitness_center,
-                  Colors.orange,
+          // Header Section
+          _buildHeader(),
+          // Content with padding
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Quick Stats Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildQuickStatCard(
+                        'เผาผลาญ',
+                        '320 kcal',
+                        Icons.fitness_center,
+                        Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildQuickStatCard(
+                        'เหลือ',
+                        '1200 kcal',
+                        Icons.flag,
+                        AppTheme.primaryPurple,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildQuickStatCard(
-                  'เหลือ',
-                  '1200 kcal',
-                  Icons.flag,
-                  AppTheme.primaryPurple,
+                const SizedBox(height: 16),
+                // Recent Food Logs (Compact)
+                _buildCompactFoodLogs(),
+                const SizedBox(height: 16),
+                // Calendar Widget (Smaller)
+                CalorieCalendarWidget(
+                  calorieData: _mockCalorieData,
+                  selectedDay: _selectedDay,
+                  onDaySelected: (date) {
+                    setState(() {
+                      _selectedDay = date;
+                    });
+                  },
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Recent Food Logs (Compact)
-          _buildCompactFoodLogs(),
-          const SizedBox(height: 16),
-          // Calendar Widget (Smaller)
-          CalorieCalendarWidget(
-            calorieData: _mockCalorieData,
-            selectedDay: _selectedDay,
-            onDaySelected: (date) {
-              setState(() {
-                _selectedDay = date;
-              });
-            },
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  // Tab 2: โภชนาการ - Macro แล���อาหาร
+  // Tab 2: โภชนาการ - Macro แ������อาหาร
   Widget _buildNutritionTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -627,23 +635,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // Tab 3: สุขภาพ - Heart Rate และข้อมูลสุขภาพ
-  Widget _buildActivityTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _buildHeartRateSection(),
-          const SizedBox(height: 16),
-          _buildWorkoutSummary(),
-          const SizedBox(height: 16),
-          _buildHealthMetrics(),
-        ],
-      ),
-    );
-  }
-
-  // Tab 4: บันทึกอาหาร - เพิ่มอาหารและรายการอาหารที่บันทึกไว้
+  // Tab 3: บันทึกอาหาร - เพิ่มอาหารและรายการอาหารที่บันทึกไว้
   Widget _buildFoodLogTab() {
     return Container(
       color: AppTheme.backgroundLight,
@@ -692,7 +684,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const Spacer(),
                 Text(
-                  '${_mockRecentFoodLogs.length} รายการ',
+                  '${_mockRecentFoodLogs.length} รายกา���',
                   style: AppTextStyle.bodySmall(context).copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -1009,7 +1001,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'ไม่มีข้อมูลอ��ตราการเต้นของหัวใจ',
+                    'ไม่มีข้อมูลอ��ต��าการเต้นของหัวใจ',
                     style: AppTextStyle.bodyMedium(context).copyWith(
                       color: Colors.grey[600],
                     ),
@@ -1030,55 +1022,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildWorkoutSummary() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'การออกกำลังกายวันนี้',
-            style: AppTextStyle.titleMedium(context).copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildQuickStatCard(
-                  'เวลา',
-                  '45 นาที',
-                  Icons.timer,
-                  Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildQuickStatCard(
-                  'แคลอรี่',
-                  '320 kcal',
-                  Icons.local_fire_department,
-                  Colors.orange,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildHealthMetrics() {
     return Container(

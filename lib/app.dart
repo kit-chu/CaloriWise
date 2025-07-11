@@ -37,25 +37,25 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(), // Combined หน้าแรก + บันทึกอาหาร
+    const ExerciseCalculatorScreen(), // ออกกำลังกาย
     const AnalyticsScreen(), // Combined การวิเคราะห์ + AI Chat
     const AchievementsScreen(), // เป้าหมาย + รางวัล
-    const ExerciseCalculatorScreen(), // ออกกำลังกาย
     const ProfileScreen(), // โปรไฟล์
   ];
 
   final List<String> _titles = [
     'หน้าแรก',
+    'ออกกำ',
     'วิเคราะห์',
     'เป้าหมาย',
-    'ออกกำ',
     'โปรไฟล์',
   ];
 
   final List<IconData> _icons = [
     Icons.home,
+    Icons.fitness_center,
     Icons.analytics,
     Icons.emoji_events,
-    Icons.fitness_center,
     Icons.person,
   ];
 
