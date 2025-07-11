@@ -52,7 +52,7 @@ This project is licensed under the MIT License.
 
 ## Contact
 
-For support or questions, please contact the developer at [your-email@example.com].
+For support or questions, please contact the developer at [devkit002@gmail.com].
 
 ## App Screenshots
 
