@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/homeScreen/response/homeScreenResponse.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_style.dart';
 import '../models/macro_data.dart';
@@ -19,7 +20,7 @@ class MacroTrackingCard extends StatelessWidget {
         Expanded(
           child: _buildMacroCard(
             context: context,
-            label: 'โปรตีน',
+            label: TextHomeScreen.protein,
             value: data.protein,
             goal: data.proteinGoal,
             color: const Color(0xFF10B981), // Green
@@ -30,7 +31,7 @@ class MacroTrackingCard extends StatelessWidget {
         Expanded(
           child: _buildMacroCard(
             context: context,
-            label: 'คาร์บ',
+            label: TextHomeScreen.carbs,
             value: data.carbs,
             goal: data.carbsGoal,
             color: const Color(0xFFF59E0B), // Orange
@@ -41,7 +42,7 @@ class MacroTrackingCard extends StatelessWidget {
         Expanded(
           child: _buildMacroCard(
             context: context,
-            label: 'ไขมัน',
+            label: TextHomeScreen.fat,
             value: data.fat,
             goal: data.fatGoal,
             color: const Color(0xFF7C3AED), // Purple

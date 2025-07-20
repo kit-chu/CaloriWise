@@ -1,4 +1,6 @@
+import 'package:calori_wise_app/screens/homeScreen/home_screen.dart';
 import 'package:flutter/material.dart';
+import '../screens/homeScreen/response/homeScreenResponse.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_style.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -151,7 +153,7 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'แคลอรี่ประจำวัน',
+                TextHomeScreen.dailyCalories,
                 style: AppTextStyle.titleLarge(context).copyWith(
                   color: AppTheme.primaryPurple,
                   fontWeight: FontWeight.w600,
@@ -228,7 +230,7 @@ class _CalorieCalendarWidgetState extends State<CalorieCalendarWidget> with Sing
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    'วันนี้',
+                    TextHomeScreen.today,
                     style: AppTextStyle.labelMedium(context).copyWith(
                       color: textColor,
                       fontWeight: FontWeight.w600,

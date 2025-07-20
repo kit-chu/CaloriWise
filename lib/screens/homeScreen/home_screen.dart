@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:calori_wise_app/screens/homeScreen/request/homeScreenReuest.dart';
+import 'package:calori_wise_app/screens/homeScreen/response/homeScreenResponse.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
@@ -30,18 +32,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late DateTime _selectedDay;
   late MacroData _mockMacroData;
   static const String nameScreen = "HomeScreen";
-  // Tab Controller สำหรับ Bottom Navigation - เปลี่ยนจาก 3 เป็น 4 แท็บ
   late TabController _tabController;
 
-  // Animation controller สำหรับ effect หัวใจ
   late AnimationController _heartbeatController;
   late Animation<double> _heartbeatAnimation;
 
-  // สถานะการเชื่อมต่อและข้อมูลอัตราการเต้นหัวใจ
   bool _isHeartRateConnected = false;
   Timer? _heartRateTimer;
   List<int> _mockHeartRates = [];
   int _currentHeartRate = 0;
+  List<Items>? items = [];
+  late Map<String, String> _textLabels;
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _generateMockMacroData();
     _generateMockFoodLogs();
     _setupHeartRateMockData();
+    TextHomeScreen.setLanguage(true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final request = HomeScreenRequest(collection: nameScreen, version: 0.3);
@@ -69,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         curve: Curves.easeInOut,
       ),
     );
+    _textLabels = {};
   }
 
   void _setupHeartRateMockData() {
@@ -356,6 +359,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ];
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -367,12 +371,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               SnackBar(content: Text(state.message)),
             );
           }
+          if (state is HomeScreenLoaded) {
+            items = state.response.data?.items;
+            TextHomeScreen.setLabels(items);
+          }
         },
         builder: (context, state) {
           if (state is HomeScreenLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          // สามารถเพิ่มการเช็ค state อื่น ๆ ได้ตามต้องการ
           return Column(
             children: [
               // Tab Bar
@@ -432,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: CircleAvatar(
                       radius: 24,
                       backgroundColor: Colors.white.withAlpha(230),
-                      child: Icon(
+                      child: const Icon(
                         Icons.person,
                         size: 28,
                         color: AppTheme.primaryPurple,
@@ -445,13 +452,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'ยินดีต้อนรับ',
+                          TextHomeScreen.welcome,
                           style: AppTextStyle.titleSmall(context).copyWith(
                             color: Colors.white.withAlpha(230),
                           ),
                         ),
                         Text(
-                          'คุณ แคลอรี่ไวส์',
+                          TextHomeScreen.userName,
                           style: AppTextStyle.titleLarge(context).copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -497,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'วันนี้',
+                          TextHomeScreen.today,
                           style: AppTextStyle.titleSmall(context).copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -512,9 +519,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           Text(
-                            'จาก ${selectedData.targetCalories.toInt()} kcal',
+                            '${TextHomeScreen.from} ${selectedData.targetCalories.toInt()} ${TextHomeScreen.kcal}',
                             style: AppTextStyle.bodyMedium(context).copyWith(
-                              color: AppTheme.textSecondary,
+                            color: AppTheme.textSecondary,
                             ),
                           ),
                         ] else ...[
@@ -526,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           Text(
-                            'จาก 2000 kcal',
+                            '${TextHomeScreen.from} 2000 ${TextHomeScreen.kcal}',
                             style: AppTextStyle.bodyMedium(context).copyWith(
                               color: AppTheme.textSecondary,
                             ),
@@ -580,10 +587,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
-        tabs: const [
-          Tab(text: 'ภาพรวม'),
-          Tab(text: 'โภชนาการ'),
-          Tab(text: 'บันทึกอาหาร'), // เพิ่มแท็บใหม่
+        tabs: [
+          Tab(text: TextHomeScreen.overview),
+          Tab(text: TextHomeScreen.nutrition),
+          Tab(text:  TextHomeScreen.foodLog), // เพิ่มแท็บใหม่
         ],
       ),
     );
@@ -606,8 +613,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   children: [
                     Expanded(
                       child: _buildQuickStatCard(
-                        'เผาผลาญ',
-                        '320 kcal',
+                        TextHomeScreen.burned,
+                        '320 ${TextHomeScreen.kcal}',
                         Icons.fitness_center,
                         Colors.orange,
                       ),
@@ -615,8 +622,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildQuickStatCard(
-                        'เหลือ',
-                        '1200 kcal',
+                        TextHomeScreen.remaining,
+                        '1200 ${TextHomeScreen.kcal}',
                         Icons.flag,
                         AppTheme.primaryPurple,
                       ),
@@ -669,14 +676,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddFoodScreen(),
-                  ),
-                );
-              },
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddFoodScreen(),
+            ),
+          );
+    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryPurple,
                 foregroundColor: Colors.white,
@@ -685,12 +692,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.add_circle_outline),
                   SizedBox(width: 8),
-                  Text('เพิ่มอาหาร', style: TextStyle(fontSize: 16)),
+                  Text(TextHomeScreen.addFood, style: TextStyle(fontSize: 16)),
                 ],
               ),
             ),
@@ -701,14 +708,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Row(
               children: [
                 Text(
-                  'รายการอาหารที่เพิ่ม',
+                  TextHomeScreen.foodLogList,
                   style: AppTextStyle.titleMedium(context).copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  '${_mockRecentFoodLogs.length} รายกา���',
+                  '${_mockRecentFoodLogs.length} ${TextHomeScreen.items}',
                   style: AppTextStyle.bodySmall(context).copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -775,7 +782,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'โปรตีน: ${food.protein}g • คาร์บ: ${food.carbs}g • ไขมัน: ${food.fat}g',
+                          '${TextHomeScreen.protein}: ${food.protein}g • ${TextHomeScreen.carbs}: ${food.carbs}g • ${TextHomeScreen.fat}: ${food.fat}g',
                           style: AppTextStyle.bodySmall(context).copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -871,7 +878,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Expanded(
                   child: Text(
-                    'อาหารล่าสุด',
+                    TextHomeScreen.recentFood,
                     style: AppTextStyle.titleMedium(context).copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -880,7 +887,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 TextButton(
                   onPressed: () => _tabController.animateTo(1),
                   child: Text(
-                    'ดูทั้งหมด',
+                    TextHomeScreen.seeAll,
                     style: TextStyle(color: AppTheme.primaryPurple),
                   ),
                 ),
