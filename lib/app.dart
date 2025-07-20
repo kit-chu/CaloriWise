@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'theme/app_theme.dart';
-import 'screens/home_screen.dart';
+import 'screens/homeScreen/home_screen.dart';
+import 'screens/homeScreen/bloc/home_screen_bloc.dart';
 import 'screens/profile_screen.dart';
 import 'screens/exercise_calculator_screen.dart';
 import 'screens/analytics_screen.dart';
@@ -36,7 +38,10 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const HomeScreen(), // Combined หน้าแรก + บันทึกอาหาร
+    BlocProvider(
+      create: (context) => HomeScreenBloc(),
+      child: const HomeScreen(),
+    ),
     const ExerciseCalculatorScreen(), // ออกกำลังกาย
     const AnalyticsScreen(), // Combined การวิเคราะห์ + AI Chat
     const AchievementsScreen(), // เป้าหมาย + รางวัล

@@ -1,17 +1,21 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:calori_wise_app/screens/homeScreen/request/homeScreenReuest.dart';
 import 'package:flutter/material.dart';
-import '../models/macro_data.dart';
-import '../models/food_log.dart';
-import '../theme/app_theme.dart';
-import '../theme/text_style.dart';
-import '../utils/date_formatter.dart';
-import '../widgets/calorie_calendar_widget.dart';
-import '../widgets/macro_tracking_card.dart';
-import '../widgets/painters/multi_color_circular_progress_painter.dart';
-import '../widgets/recent_food_logs.dart';
-import '../widgets/painters/heart_rate_graph_painter.dart';
-import 'add_food_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../models/macro_data.dart';
+import '../../models/food_log.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/text_style.dart';
+import '../../utils/date_formatter.dart';
+import '../../widgets/calorie_calendar_widget.dart';
+import '../../widgets/macro_tracking_card.dart';
+import '../../widgets/painters/multi_color_circular_progress_painter.dart';
+import '../../widgets/recent_food_logs.dart';
+import '../../widgets/painters/heart_rate_graph_painter.dart';
+import '../add_food_screen.dart';
+import 'bloc/home_screen_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late List<FoodLog> _mockRecentFoodLogs;
   late DateTime _selectedDay;
   late MacroData _mockMacroData;
-
+  static const String nameScreen = "HomeScreen";
   // Tab Controller สำหรับ Bottom Navigation - เปลี่ยนจาก 3 เป็น 4 แท็บ
   late TabController _tabController;
 
@@ -43,11 +47,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
-    _tabController = TabController(length: 3, vsync: this); // เปลี่ยนจาก 4 เป็น 3 แท็บ
+    _tabController = TabController(length: 3, vsync: this);
     _generateMockData();
     _generateMockMacroData();
     _generateMockFoodLogs();
     _setupHeartRateMockData();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final request = HomeScreenRequest(collection: nameScreen, version: 0.3);
+      context.read<HomeScreenBloc>().add(FetchHomeScreenItems(request: request));
+    });
 
     _heartbeatController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -351,25 +360,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
-      body: Column(
-        children: [
-          // Tab Bar
-          SafeArea(
-            bottom: false,
-            child: _buildTabBar(),
-          ),
-          // Tab Content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOverviewTab(),
-                _buildNutritionTab(),
-                _buildFoodLogTab(),
-              ],
-            ),
-          ),
-        ],
+      body: BlocConsumer<HomeScreenBloc, HomeScreenState>(
+        listener: (context, state) {
+          if (state is HomeScreenError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is HomeScreenLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          // สามารถเพิ่มการเช็ค state อื่น ๆ ได้ตามต้องการ
+          return Column(
+            children: [
+              // Tab Bar
+              SafeArea(
+                bottom: false,
+                child: _buildTabBar(),
+              ),
+              // Tab Content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildOverviewTab(),
+                    _buildNutritionTab(),
+                    _buildFoodLogTab(),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -953,7 +977,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   builder: (context, child) {
                     return Transform.scale(
                       scale: _heartbeatAnimation.value,
-                      child: Icon(
+                      child: const Icon(
                         Icons.favorite,
                         color: AppTheme.primaryPurple,
                         size: 32,
