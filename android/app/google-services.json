@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "355476641981",
+    "project_id": "calori-app-70f7c",
+    "storage_bucket": "calori-app-70f7c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355476641981:android:55d4dcce618e35c24a3fd4",
+        "android_client_info": {
+          "package_name": "com.yourcompany.calori_wise_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "355476641981-qn4f77qr118vcurt0od8438rl86vchpl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yourcompany.calori_wise_app",
+            "certificate_hash": "eba19f1aa44519d48c1f03821b41eb749ecd76dd"
+          }
+        },
+        {
+          "client_id": "355476641981-ek75ro1kiag550k78kqvh0ir98840a90.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXhBTad_2rDJZi4g7lfV11C19XpO3uTVE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "355476641981-ek75ro1kiag550k78kqvh0ir98840a90.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "355476641981-df8qgke7pum1meltqd7gfsj73slk53lp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.yourcompany.caloriWiseApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,9 +1,10 @@
+import 'dart:convert';
+
 import "package:http/http.dart" as http show Response, get, post;
 import '../../utils/api_config.dart';
 
 class ApiService {
   static const String baseUrl = ApiConfig.baseUrl;
-
   static Future<http.Response> getData(String endpoint) async {
     final url = Uri.parse(baseUrl + endpoint);
     return await http.get(url);
@@ -13,4 +14,15 @@ class ApiService {
     final url = Uri.parse(baseUrl + endpoint);
     return await http.post(url, body: body);
   }
+
+  static Future<bool> checkServerConnection(String endpoint) async {
+    try {
+      final url = Uri.parse(baseUrl + endpoint);
+      final response = await http.get(url);
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (e) {
+      return false;
+    }
+  }
+
 }

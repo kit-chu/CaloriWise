@@ -197,7 +197,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryPurple, AppTheme.primaryPurple.withValues(alpha: 0.8)],
+          colors: [AppTheme.primaryPurple, AppTheme.primaryPurple.withOpacity(0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -231,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                     Text(
                       'เลเวล ${_userData['level']} • ${_userData['streakDays']} วันติดต่อกัน',
                       style: AppTextStyle.bodyMedium(context).copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ],
@@ -275,7 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
         Text(
           title,
           style: AppTextStyle.bodySmall(context).copyWith(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: Colors.white.withOpacity(0.8),
           ),
         ),
       ],
@@ -421,7 +421,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
               child: CircularProgressIndicator(
                 value: progress.clamp(0.0, 1.0),
                 strokeWidth: 6,
-                backgroundColor: color.withValues(alpha: 0.1),
+                backgroundColor: color.withOpacity(0.1),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
@@ -456,7 +456,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -490,9 +490,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           margin: const EdgeInsets.symmetric(horizontal: 2),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
           decoration: BoxDecoration(
-            color: scoreColor.withValues(alpha: 0.1),
+            color: scoreColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: scoreColor.withValues(alpha: 0.3), width: 1),
+            border: Border.all(color: scoreColor.withOpacity(0.3), width: 1),
           ),
           child: Column(
             children: [
@@ -599,7 +599,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                     child: Column(
                       children: [
                         Text('น้ำหนักล่าสุด', style: AppTextStyle.bodyMedium(context).copyWith(color: Colors.blue, fontWeight: FontWeight.w600)),
@@ -614,7 +614,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                     child: Column(
                       children: [
                         Text('ลดไปแล้ว', style: AppTextStyle.bodyMedium(context).copyWith(color: Colors.green, fontWeight: FontWeight.w600)),
@@ -773,7 +773,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: achievement['unlocked'] ? achievement['color'].withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+        color: achievement['unlocked'] ? achievement['color'].withOpacity(0.1) : Colors.grey.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: achievement['unlocked'] ? achievement['color'] : Colors.grey, width: 2),
       ),
@@ -840,7 +840,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   Widget _buildMetricItem(String label, String value, double progress, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -899,7 +899,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   Widget _buildSleepCard(String title, String value, double progress, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -958,7 +958,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   Widget _buildVitalCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1072,7 +1072,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
             child: Icon(Icons.fitness_center, color: Colors.blue, size: 20),
           ),
           const SizedBox(width: 12),
@@ -1201,7 +1201,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _getHealthScoreColor(day['healthScore']).withValues(alpha: 0.1),
+                      color: _getHealthScoreColor(day['healthScore']).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text('คะแนน ${day['healthScore']}%', style: AppTextStyle.bodySmall(context).copyWith(color: _getHealthScoreColor(day['healthScore']), fontWeight: FontWeight.bold)),
@@ -1236,9 +1236,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1278,7 +1278,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
               child: Row(
                 children: [
                   Icon(Icons.info_outline, color: Colors.blue, size: 20),

@@ -1,0 +1,20 @@
+flutter_native_splash:
+  color: "#7C4DFF" # AppTheme.primaryPurple
+  image: assets/images/app_logo.png
+  branding: null
+  color_dark: "#7C4DFF"
+  image_dark: assets/images/app_logo.png
+  android: true
+  ios: true
+  web: false
+  android_gravity: fill
+  ios_content_mode: center
+  fullscreen: false
+  android_12:
+    image: assets/images/app_logo.png
+    icon_background_color: "#7C4DFF"
+    image_dark: assets/images/app_logo.png
+    icon_background_color_dark: "#7C4DFF"
+    branding: null
+    branding_dark: null
+

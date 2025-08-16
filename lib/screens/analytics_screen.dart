@@ -221,7 +221,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           end: Alignment.bottomRight,
           colors: [
             AppTheme.primaryPurple,
-            AppTheme.primaryPurple.withValues(alpha: 0.8)
+            AppTheme.primaryPurple.withOpacity(0.8)
           ],
         ),
       ),
@@ -230,7 +230,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -255,7 +255,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 Text(
                   'ข้อมูลเชิงลึกและคำปรึกษา AI',
                   style: AppTextStyle.bodyMedium(context).copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withOpacity(0.9),
                   ),
                 ),
               ],
@@ -265,7 +265,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: DropdownButtonHideUnderline(
@@ -391,8 +391,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF667eea).withValues(alpha: 0.1),
-              const Color(0xFF764ba2).withValues(alpha: 0.05),
+              const Color(0xFF667eea).withOpacity(0.1),
+              const Color(0xFF764ba2).withOpacity(0.05),
             ],
           ),
         ),
@@ -526,7 +526,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.1),
+                color: Colors.amber.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -566,7 +566,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -610,7 +610,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppTheme.primaryPurple.withValues(alpha: 0.1),
+              AppTheme.primaryPurple.withOpacity(0.1),
               Colors.white,
             ],
           ),
@@ -719,17 +719,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     switch (pattern['type']) {
       case 'positive':
         borderColor = Colors.green;
-        bgColor = Colors.green.withValues(alpha: 0.1);
+        bgColor = Colors.green.withOpacity(0.1);
         icon = Icons.check_circle;
         break;
       case 'warning':
         borderColor = Colors.orange;
-        bgColor = Colors.orange.withValues(alpha: 0.1);
+        bgColor = Colors.orange.withOpacity(0.1);
         icon = Icons.warning;
         break;
       default:
         borderColor = Colors.red;
-        bgColor = Colors.red.withValues(alpha: 0.1);
+        bgColor = Colors.red.withOpacity(0.1);
         icon = Icons.error;
     }
 
@@ -739,7 +739,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor.withValues(alpha: 0.3)),
+        border: Border.all(color: borderColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -821,10 +821,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: (recommendation['color'] as Color).withValues(alpha: 0.05),
+        color: (recommendation['color'] as Color).withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: (recommendation['color'] as Color).withValues(alpha: 0.2),
+          color: (recommendation['color'] as Color).withOpacity(0.2),
         ),
       ),
       child: Column(
@@ -972,8 +972,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.blue.withValues(alpha: 0.1),
-                    Colors.purple.withValues(alpha: 0.05),
+                    Colors.blue.withOpacity(0.1),
+                    Colors.purple.withOpacity(0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -1096,7 +1096,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

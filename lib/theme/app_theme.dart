@@ -124,16 +124,86 @@ class AppTheme {
       );
 
   static ThemeData get lightTheme => ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: primaryPurple),
-        useMaterial3: true,
-        textTheme: _textTheme,
-        scaffoldBackgroundColor: backgroundLight,
-        appBarTheme: AppBarTheme(
-          backgroundColor: primaryPurple,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          titleTextStyle: _textTheme.titleLarge?.copyWith(color: Colors.white),
-          iconTheme: const IconThemeData(color: Colors.white),
+    colorScheme: ColorScheme.fromSeed(seedColor: primaryPurple),
+    useMaterial3: true,
+    textTheme: _textTheme,
+    scaffoldBackgroundColor: backgroundLight,
+
+    appBarTheme: AppBarTheme(
+      backgroundColor: primaryPurple,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      titleTextStyle: _textTheme.titleLarge?.copyWith(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
+    ),
+
+    // ✅ เพิ่ม Dialog theme สำหรับ Google Sign-In
+    dialogTheme: DialogTheme(
+      backgroundColor: Colors.white,
+      elevation: 16,
+      shadowColor: Colors.black.withOpacity(0.3),
+      surfaceTintColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      titleTextStyle: _textTheme.titleLarge?.copyWith(
+        color: textPrimary,
+        fontWeight: FontWeight.w600,
+      ),
+      contentTextStyle: _textTheme.bodyMedium?.copyWith(
+        color: textSecondary,
+      ),
+    ),
+
+    // ✅ เพิ่ม BottomSheet theme
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: Colors.white,
+      elevation: 20,
+      shadowColor: Colors.black.withOpacity(0.4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(24),
         ),
-      );
+      ),
+      modalElevation: 20,
+      modalBackgroundColor: Colors.white,
+    ),
+
+    // ✅ เพิ่ม Card theme สำหรับ account selection
+    cardTheme: CardTheme(
+      color: Colors.white,
+      elevation: 12,
+      shadowColor: Colors.black.withOpacity(0.2),
+      surfaceTintColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    ),
+
+    // ✅ เพิ่ม List tile theme สำหรับ account list
+    listTileTheme: ListTileThemeData(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      titleTextStyle: _textTheme.bodyLarge?.copyWith(
+        color: textPrimary,
+        fontWeight: FontWeight.w500,
+      ),
+      subtitleTextStyle: _textTheme.bodyMedium?.copyWith(
+        color: textSecondary,
+      ),
+    ),
+
+    // ✅ เพิ่ม Divider theme
+    dividerTheme: DividerThemeData(
+      color: Colors.grey.shade200,
+      thickness: 1,
+      space: 16,
+    ),
+  );
+
+
+
 }

@@ -233,13 +233,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primaryPurple.withValues(alpha: 0.8),
-                  AppTheme.primaryPurple.withValues(alpha: 0.6),
+                  AppTheme.primaryPurple.withOpacity(0.8),
+                  AppTheme.primaryPurple.withOpacity(0.6),
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryPurple.withValues(alpha: 0.3),
+                  color: AppTheme.primaryPurple.withOpacity(0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -262,7 +262,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -288,7 +288,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
   Widget _buildBasicInfoSection() {
     return Card(
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -300,7 +300,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryPurple.withValues(alpha: 0.1),
+                    color: AppTheme.primaryPurple.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -448,7 +448,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
   Widget _buildGoalSelectionSection() {
     return Card(
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -460,7 +460,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -515,7 +515,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: goalData['color'].withValues(alpha: 0.3),
+              color: goalData['color'].withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -545,7 +545,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
               Text(
                 goalData['description'],
                 style: AppTextStyle.bodySmall(context).copyWith(
-                  color: isSelected ? Colors.white.withValues(alpha: 0.9) : Colors.grey[600],
+                  color: isSelected ? Colors.white.withOpacity(0.9) : Colors.grey[600],
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -561,7 +561,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
   Widget _buildWeightSection() {
     return Card(
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -573,7 +573,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
+                    color: Colors.blue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -644,7 +644,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
   Widget _buildActivitySelectionSection() {
     return Card(
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -656,7 +656,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -694,7 +694,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryPurple.withValues(alpha: 0.1) : Colors.grey[50],
+          color: isSelected ? AppTheme.primaryPurple.withOpacity(0.1) : Colors.grey[50],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppTheme.primaryPurple : Colors.grey[300]!,
@@ -751,7 +751,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
   Widget _buildCalculationsCard() {
     return Card(
       elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -761,8 +761,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppTheme.primaryPurple.withValues(alpha: 0.1),
-              AppTheme.primaryPurple.withValues(alpha: 0.05),
+              AppTheme.primaryPurple.withOpacity(0.1),
+              AppTheme.primaryPurple.withOpacity(0.05),
             ],
           ),
         ),
@@ -774,7 +774,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryPurple.withValues(alpha: 0.2),
+                    color: AppTheme.primaryPurple.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -843,7 +843,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: isFullWidth
           ? Row(
@@ -963,12 +963,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
         gradient: LinearGradient(
           colors: [
             AppTheme.primaryPurple,
-            AppTheme.primaryPurple.withValues(alpha: 0.8),
+            AppTheme.primaryPurple.withOpacity(0.8),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryPurple.withValues(alpha: 0.3),
+            color: AppTheme.primaryPurple.withOpacity(0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -1092,9 +1092,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: AppTheme.primaryPurple.withValues(alpha: 0.1),
+          color: AppTheme.primaryPurple.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.primaryPurple.withValues(alpha: 0.2)),
+          border: Border.all(color: AppTheme.primaryPurple.withOpacity(0.2)),
         ),
         child: Column(
           children: [
@@ -1166,3 +1166,4 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
     }
   }
 }
+
